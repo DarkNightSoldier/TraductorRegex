@@ -1,0 +1,27 @@
+// ----------------------------------------------------
+// Reglas de Producción (Definen la estructura de la frase)
+// ----------------------------------------------------
+start: sequence
+sequence: pattern (connector pattern)*
+pattern: element ("or" element)*
+element: term repetition?
+
+// ----------------------------------------------------
+// Términos Base (Los bloques de construcción de la Regex)
+// ----------------------------------------------------
+term: "letter"      -> t_letra
+    | "digit"     -> t_digito
+    | "space"    -> t_espacio
+    | "any character" -> t_cualquier
+
+// ----------------------------------------------------
+// Conectores y Repeticiones (Operadores de la Regex)
+// ----------------------------------------------------
+connector: "followed by"
+repetition: "optional"  -> r_opcional
+          | "one or more" -> r_mas
+
+// ----------------------------------------------------
+// Ignorar (Token que el parser ignora completamente)
+// ----------------------------------------------------
+%ignore /[\s,]+/
