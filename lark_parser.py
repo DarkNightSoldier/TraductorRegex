@@ -1,36 +1,42 @@
-from lark import Lark
+from lark import Lark, UnexpectedInput
 from translator import RegexTranslator
+from normalizer import Normalizer
+
+# Crear instancia del normalizador
+normalizer = Normalizer()
+
+# Cargar parser Lark con la gramática actualizada
+try:
+    parser = Lark.open(
+        "grammar.lark",
+        rel_to=__file__,
+        start="start",
+        parser="lalr"
+    )
+except Exception as e:
+    print("ERROR cargando grammar.lark:", e)
+    parser = None
 
 
-def translate_to_regex(natural_language_phrase):
-    """
-    Inicializa el parser, analiza la frase y la transforma en una Regex.
-    """
-    
-    # 1. Inicializar el Parser con la Gramática
-    # 'lalr' es rápido y es adecuado para gramáticas de izquierda a derecha.
-    # Se carga la Gramática Usando Lark.open()
-    # Lark buscará el archivo en la ubicación especificada.
-    # El 'rel_to=__file__' asegura que busque el archivo relativo a la ubicación
-    # del script de Python actual, lo cual es muy útil.
+def translate_to_regex(text):
+    if parser is None:
+        return "ERROR: No se pudo cargar la gramática."
+
     try:
-        parser = Lark.open(
-            "grammar.lark",  # El nombre del archivo de gramática
-            rel_to=__file__,       # Ubicación relativa al archivo Python actual
-            start='start',         # El nombre de la regla inicial
-            parser='lalr'          # El algoritmo de análisis
-        )
-    except FileNotFoundError:
-        return "Error: No se encontró el archivo 'grammar.lark'. Asegúrate de que esté en el mismo directorio."
+        # 1. Normalizar entrada natural → DSL
+        normalized = normalizer.normalize(text)
+        print("NORM >>>", normalized)
 
-    try:
-        # 2. Analizar la frase para crear el AST
-        tree = parser.parse(natural_language_phrase)
-        
-        # 3. Transformar el AST en la Regex
+        # 2. Parsear DSL
+        tree = parser.parse(normalized)
+
+        # 3. Transformar AST → regex
         regex = RegexTranslator().transform(tree)
-        
+
         return regex
-        
+
+    except UnexpectedInput as e:
+        return f"ERROR: La frase no coincide con el DSL."
+
     except Exception as e:
-        return f"Error de análisis para '{natural_language_phrase}': {e}"
+        return f"ERROR interno: {e}"

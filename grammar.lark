@@ -1,27 +1,38 @@
-// ----------------------------------------------------
-// Reglas de Producción (Definen la estructura de la frase)
-// ----------------------------------------------------
-start: sequence
-sequence: pattern (connector pattern)*
-pattern: element ("or" element)*
-element: term repetition?
+start: expr
 
-// ----------------------------------------------------
-// Términos Base (Los bloques de construcción de la Regex)
-// ----------------------------------------------------
-term: "letter"      -> t_letra
-    | "digit"     -> t_digito
-    | "space"    -> t_espacio
-    | "any character" -> t_cualquier
+?expr: sequence
+     | sequence "or" expr -> or_expr
 
-// ----------------------------------------------------
-// Conectores y Repeticiones (Operadores de la Regex)
-// ----------------------------------------------------
-connector: "followed by"
-repetition: "optional"  -> r_opcional
-          | "one or more" -> r_mas
+sequence: element ( "followed by" element )*
 
-// ----------------------------------------------------
-// Ignorar (Token que el parser ignora completamente)
-// ----------------------------------------------------
-%ignore /[\s,]+/
+element: group
+       | repeated_term
+
+group: "group" sequence "end group" repetition?
+
+repeated_term: repetition? term repetition?
+
+term: base_term "except" base_term -> t_except
+    | base_term
+
+base_term: "letter"        -> t_letter
+         | "digit"         -> t_digit
+         | "space"         -> t_space
+         | "any character" -> t_any
+         | "uppercase letter" -> t_upper
+         | "lowercase letter" -> t_lower
+         | CHAR_LITERAL    -> t_char
+         | STRING_LITERAL  -> t_string
+
+repetition: INT "times"                  -> r_exact
+          | "between" INT "and" INT "times" -> r_range
+          | "one or more"                -> r_one_or_more
+          | "zero or more"               -> r_zero_or_more
+          | "optional"                   -> r_optional
+
+CHAR_LITERAL: "'" /[^']/ "'"
+STRING_LITERAL: "'" /[^']*/ "'"
+
+%import common.INT
+%import common.WS
+%ignore WS

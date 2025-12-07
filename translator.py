@@ -1,67 +1,90 @@
 from lark import Transformer
 
 class RegexTranslator(Transformer):
-    """
-    Transforma el Árbol de Sintaxis Abstracta (AST) de la gramática
-    en la expresión regular final.
-    """
 
-    # --- Mapeo de Términos Base a Regex ---
-    
-    # Convierte los tokens terminales del lenguaje natural a su equivalente Regex
-    def t_letra(self, _):
-        # "[a-zA-Z]"
-        return "[a-zA-Z]"
+    # ---------- BASE TERMS ----------
+    def t_letter(self, _): return "[a-zA-Z]"
+    def t_digit(self, _): return "[0-9]"
+    def t_space(self, _): return r"\s"
+    def t_any(self, _):   return "."
 
-    def t_digito(self, _):
-        # "[0-9]"
-        return "[0-9]"
-        
-    def t_espacio(self, _):
-        # "\s" (o " ")
-        return r"\s"
-        
-    def t_cualquier(self, _):
-        # "."
-        return "."
-        
-    # --- Manejo de Repeticiones (Modificadores) ---
-    
-    def r_opcional(self, _):
-        # "?"
-        return "?"
-        
-    def r_mas(self, _):
-        # "+"
-        return "+"
+    def t_upper(self, _): return "[A-Z]"
+    def t_lower(self, _): return "[a-z]"
 
-    # --- Manejo de la Estructura (Nodos del AST) ---
+    def t_char(self, tok):
+        return tok[0][1:-1]
 
+    def t_string(self, tok):
+        return tok[0][1:-1]
+
+    # ---------- NEGATION ----------
+    def t_except(self, children):
+        base, neg = children
+        neg_inside = neg.strip("[]")
+        return f"[^{neg_inside}]"
+
+    # ---------- REPETITIONS ----------
+    def r_optional(self, _):     return "?"
+    def r_one_or_more(self, _): return "+"
+    def r_zero_or_more(self, _):return "*"
+    def r_exact(self, children): return f"{{{children[0]}}}"
+    def r_range(self, children): return f"{{{children[0]},{children[1]}}}"
+
+    # ---------- TERM ----------
     def term(self, children):
-        # Un término base sin modificadores es solo el valor del hijo
         return children[0]
-    
-    def element(self, children):
-        # Si tiene repetición, agrega el modificador al final
+
+    def base_term(self, children):
+        return children[0]
+
+    # ---------- REPEATED TERM ----------
+    def repeated_term(self, children):
+        """
+        children may be:
+        [term]
+        [rep_before, term]
+        [term, rep_after]
+        [rep_before, term, rep_after]
+        """
+
+        # Convert Trees to strings
+        children = [str(c) for c in children]
+
+        if len(children) == 1:
+            return children[0]
+
         if len(children) == 2:
-            base_regex = children[0]
-            modifier = children[1]
-            return f"{base_regex}{modifier}"
-        # Si no, es solo el término base
-        return children[0]
+            a, b = children
+            rep_symbols = ["?", "+", "*"]
+            if a.startswith("{") or a in rep_symbols:
+                return b + a
+            return a + b
 
-    def pattern(self, children):
-        # Maneja la elección ("o"). Une los elementos con el operador "|"
-        if len(children) > 1:
-            # Los patrones de elección se deben encerrar en paréntesis
-            return f"({'|'.join(children)})"
-        return children[0]
+        if len(children) == 3:
+            rep_before, term, rep_after = children
+            return term + rep_before + rep_after
 
+        return "".join(children)
+
+    # ---------- GROUP ----------
+    def group(self, children):
+        children = [str(c) for c in children]
+        if len(children) == 1:
+            return "(" + children[0] + ")"
+        return "(" + children[0] + ")" + children[1]
+
+    # ---------- SEQUENCE ----------
     def sequence(self, children):
-        # Maneja la concatenación ("seguido de"). Une los patrones
-        # El conector "seguido de" se ignora en la transformación
-        return "".join(c for c in children if isinstance(c, str))
-        
+        return "".join(str(c) for c in children)
+
+    # ---------- OR ----------
+    def or_expr(self, children):
+        return "(" + str(children[0]) + "|" + str(children[1]) + ")"
+
+    # ---------- ELEMENT ----------
+    def element(self, children):
+        return children[0]
+
+    # ---------- START ----------
     def start(self, children):
-        # El resultado final es la secuencia
         return children[0]
