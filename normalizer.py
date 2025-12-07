@@ -67,55 +67,42 @@ class Normalizer:
             text
         )
 
-        # =========================================================
-        # 🔥 FIX 1 — "3 digit one or more" → "digit 3 times"
-        # =========================================================
+        #  FIX 1 — "3 digit one or more" → "digit 3 times"
         text = re.sub(
             r"\b(\d+)\s+(digit|letter|lowercase letter|uppercase letter|any character)\s+one or more\b",
             r"\2 \1 times",
             text
         )
 
-        # =========================================================
-        # 🔥 FIX 2 — "digit one or more N times" → "digit N times"
-        # =========================================================
+        
+        #  FIX 2 — "digit one or more N times" → "digit N times"
         text = re.sub(
             r"(digit|letter|lowercase letter|uppercase letter|any character) one or more (\d+) times",
             r"\1 \2 times",
             text
         )
 
-        # =========================================================
-        # 🔥 FIX 3 — "digit one or more between X and Y times"
-        # =========================================================
+        #  FIX 3 — "digit one or more between X and Y times"
         text = re.sub(
             r"(digit|letter|lowercase letter|uppercase letter|any character) one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
 
-        # =========================================================
-        # 🔥 FIX 4 — "one or more one or more" → "one or more"
-        # =========================================================
+        #  FIX 4 — "one or more one or more" → "one or more"
         text = text.replace("one or more one or more", "one or more")
 
-        # =========================================================
-        # 🔥 FIX 5 — "except digit one or more" → "except digit"
-        # =========================================================
+        #  FIX 5 — "except digit one or more" → "except digit"
         text = text.replace(" except digit one or more", " except digit")
 
-        # =========================================================
-        # 🔥 FIX 6 — "X one or more twice" → "X 2 times"
-        # =========================================================
+        #  FIX 6 — "X one or more twice" → "X 2 times"
         text = re.sub(
             r"(digit|letter|lowercase letter|uppercase letter|any character) one or more twice",
             r"\1 2 times",
             text
         )
 
-        # =========================================================
-        # 🔥 FIX 7 — "group ... end group one or more twice"
-        # =========================================================
+        #  FIX 7 — "group ... end group one or more twice"
         text = re.sub(
             r"(group .*? end group) one or more twice",
             r"\1 2 times",
