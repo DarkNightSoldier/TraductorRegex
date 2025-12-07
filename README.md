@@ -122,7 +122,7 @@ text
 ---
 
 #  Requisitos
-pip install lark-parser prompt_toolkit colorama
+pip install lark prompt_toolkit colorama
 
 text
 
