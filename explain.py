@@ -210,5 +210,23 @@ def explain_tree(tree):
 
         return regex, steps
 
+    if nodetype == "t_vowel":
+        return "[aeiouAEIOU]", ["vowel → [aeiouAEIOU]"]
+
+    if nodetype == "t_consonant":
+        return "[b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]", ["consonant → (all consonants)"]
+
+    if nodetype == "t_word":
+        return r"\w", ["word character → \\w"]
+
+    if nodetype == "t_alnum":
+        return "[A-Za-z0-9]", ["alphanumeric → [A-Za-z0-9]"]
+
+    if nodetype == "t_hex":
+        return "[0-9A-Fa-f]", ["hex digit → [0-9A-Fa-f]"]
+
+    if nodetype == "t_nonspace":
+        return r"\S", ["non whitespace → \\S"]
+
     # fallback (no debería ocurrir)
     return "", [Fore.RED + f"No sé explicar nodo: {nodetype}"]  
