@@ -2,25 +2,23 @@ from prompt_toolkit.completion import Completer, Completion
 
 # Palabras del DSL
 TERMS = [
+    # clases básicas
     "letter", "digit", "space", "any character",
     "uppercase letter", "lowercase letter",
-    "'a'", "'b'", "'c'", "'@'", "'1'",
-    "vowel", "consonant", "word character",
-    "alphanumeric", "hex digit", "whitespace",
-    "range"
-    "vowel",
-    "consonant",
+
+    # clases extendidas
+    "vowel", "consonant",
     "word character",
     "alphanumeric",
     "hex digit",
     "whitespace",
     "non whitespace",
-    "vowel",
-    "consonant",
-    "alphanumeric",
-    "whitespace",
-    "non whitespace",
-    "hex digit",
+
+    # literales simples de ejemplo
+    "'a'", "'b'", "'c'", "'@'", "'1'",
+
+    # range
+    "range",   # permite sugerir "range" como palabra clave
 ]
 
 REPETITIONS = [

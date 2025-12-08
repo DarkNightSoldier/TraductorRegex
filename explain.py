@@ -3,13 +3,6 @@ from lark_parser import normalize_text, parse_normalized, translate_tree
 
 
 def explain_phrase_and_regex(phrase, final_regex):
-    """
-    Explica paso a paso:
-    1. Normalización del DSL
-    2. AST generado por Lark
-    3. Construcción paso por paso de la regex
-    """
-
     explanation = []
 
     # ============================================================
@@ -33,7 +26,7 @@ def explain_phrase_and_regex(phrase, final_regex):
     explanation.append(tree.pretty() + "\n")
 
     # ============================================================
-    # 3. EXPLICACIÓN ESTRUCTURAL BASADA EN EL AST
+    # 3. EXPLICACIÓN ESTRUCTURAL
     # ============================================================
     explanation.append(Fore.CYAN + "=== Explicación estructural ===")
     built_regex, steps = explain_tree(tree)
@@ -49,184 +42,140 @@ def explain_phrase_and_regex(phrase, final_regex):
 
 
 # ============================================================
-# FUNCIÓN CENTRAL DE EXPLICACIÓN DEL AST
+# FUNCIÓN RECURSIVA PRINCIPAL
 # ============================================================
 
 def explain_tree(tree):
-    """
-    Explica recursivamente la construcción de la regex.
-    Retorna:
-       (regex_generada, lista_de_explicaciones)
-    """
-    nodetype = tree.data if hasattr(tree, "data") else None
+    nodetype = getattr(tree, "data", None)
 
-    # Casos atómicos (terminales)
+    # -------------------- TERMINALES --------------------
     if nodetype is None:
         token = str(tree)
-        return token, [Fore.YELLOW + f"Terminal: {token}"]
+        return token, [Fore.YELLOW + f"Terminal literal → '{token}'"]
 
-    # Despachar según tipo
-    if nodetype == "t_digit":
-        return "[0-9]", [Fore.YELLOW + "digit → [0-9]"]
+    # ---------- BASE TERMS ----------
+    base_map = {
+        "t_digit": ("[0-9]", "digit → [0-9]"),
+        "t_letter": ("[a-zA-Z]", "letter → [a-zA-Z]"),
+        "t_space": (r"\s", "space → \\s"),
+        "t_any": (".", "any character → ."),
+        "t_upper": ("[A-Z]", "uppercase letter → [A-Z]"),
+        "t_lower": ("[a-z]", "lowercase letter → [a-z]"),
+        "t_vowel": ("[AEIOUaeiou]", "vowel → [AEIOUaeiou]"),
+        "t_consonant": ("[BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]",
+                        "consonant → all consonants"),
+        "t_word": (r"\w", "word character → \\w"),
+        "t_alphanumeric": ("[A-Za-z0-9]", "alphanumeric → [A-Za-z0-9]"),
+        "t_hex": ("[0-9A-Fa-f]", "hex digit → [0-9A-Fa-f]"),
+        "t_whitespace": (r"\s", "whitespace → \\s"),
+        "t_non_whitespace": (r"\S", "non whitespace → \\S"),
+    }
 
-    if nodetype == "t_letter":
-        return "[a-zA-Z]", [Fore.YELLOW + "letter → [a-zA-Z]"]
+    if nodetype in base_map:
+        regex, msg = base_map[nodetype]
+        return regex, [Fore.YELLOW + msg]
 
-    if nodetype == "t_space":
-        return r"\s", [Fore.YELLOW + "space → \\s"]
-
-    if nodetype == "t_any":
-        return ".", [Fore.YELLOW + "any character → ."]
-
-    if nodetype == "t_upper":
-        return "[A-Z]", [Fore.YELLOW + "uppercase letter → [A-Z]"]
-
-    if nodetype == "t_lower":
-        return "[a-z]", [Fore.YELLOW + "lowercase letter → [a-z]"]
-
+    # ---------- LITERALES ----------
     if nodetype == "t_char":
         val = tree.children[0].value[1:-1]
-        return val, [Fore.YELLOW + f"char '{val}' → {val}"]
+        return val, [Fore.YELLOW + f"character literal '{val}' → {val}"]
 
     if nodetype == "t_string":
         val = tree.children[0].value[1:-1]
-        return val, [Fore.YELLOW + f"string \"{val}\" → {val}"]
+        return val, [Fore.YELLOW + f"string literal \"{val}\" → {val}"]
 
-    # ------------------------------------------------------------
-    # except: base except base
-    # ------------------------------------------------------------
+    # ---------- RANGO ----------
+    if nodetype == "t_range":
+        c1 = tree.children[0][1:-1]
+        c2 = tree.children[1][1:-1]
+        r = f"[{c1}-{c2}]"
+        return r, [Fore.YELLOW + f"range '{c1}' to '{c2}' → {r}"]
+
+    # ---------- NEGACIÓN ----------
     if nodetype == "t_except":
-        base, steps_base = explain_tree(tree.children[0])
-        neg, steps_neg = explain_tree(tree.children[1])
+        base_r, base_steps = explain_tree(tree.children[0])
+        neg_r, neg_steps = explain_tree(tree.children[1])
 
-        neg_inside = neg.strip("[]")
-        regex = f"[^{neg_inside}]"
+        inside = neg_r.strip("[]")
+        r = f"[^{inside}]"
 
-        steps = []
-        steps.extend(steps_base)
-        steps.extend(steps_neg)
-        steps.append(Fore.YELLOW + f"except → Negación: [^{neg_inside}]")
+        steps = base_steps + neg_steps
+        steps.append(Fore.YELLOW + f"except → negación → {r}")
+        return r, steps
 
-        return regex, steps
+    # ---------- REPETICIONES ----------
+    if nodetype == "r_optional":
+        return "?", ["optional → ?"]
 
-    # ------------------------------------------------------------
-    # repetition nodes
-    # ------------------------------------------------------------
-    rep_map = {
-        "r_optional": "?",
-        "r_one_or_more": "+",
-        "r_zero_or_more": "*",
-        "r_exact": lambda c: f"{{{c[0]}}}",
-        "r_range": lambda c: f"{{{c[0]},{c[1]}}}",
-    }
+    if nodetype == "r_one_or_more":
+        return "+", ["one or more → +"]
 
-    if nodetype in rep_map:
-        raw = tree.children
-        if callable(rep_map[nodetype]):
-            rep = rep_map[nodetype]([str(x) for x in raw])
-        else:
-            rep = rep_map[nodetype]
+    if nodetype == "r_zero_or_more":
+        return "*", ["zero or more → *"]
 
-        return rep, [Fore.YELLOW + f"repetition → {rep}"]
+    if nodetype == "r_exact":
+        n = tree.children[0]
+        return f"{{{n}}}", [f"{n} times → {{{n}}}"]
 
-    # ------------------------------------------------------------
-    # sequence: concatenación
-    # ------------------------------------------------------------
+    if nodetype == "r_range":
+        a, b = tree.children
+        return f"{{{a},{b}}}", [f"between {a} and {b} times → {{{a},{b}}}"]
+
+    if nodetype == "r_at_least":
+        n = tree.children[0]
+        return f"{{{n},}}", [f"at least {n} times → {{{n},}}"]
+
+    if nodetype == "r_at_most":
+        n = tree.children[0]
+        return f"{{0,{n}}}", [f"at most {n} times → {{0,{n}}}"]
+
+    # ---------- SEQUENCE ----------
     if nodetype == "sequence":
-        regex_parts = []
-        steps = []
-
-        for child in tree.children:
-            sub_r, sub_steps = explain_tree(child)
-            regex_parts.append(sub_r)
-            steps.extend(sub_steps)
-
-        final = "".join(regex_parts)
-        steps.append(Fore.YELLOW + f"sequence → concatenación: {final}")
-
-        return final, steps
-
-    # ------------------------------------------------------------
-    # or_expr: X or Y
-    # ------------------------------------------------------------
-    if nodetype == "or_expr":
-        left_r, left_steps = explain_tree(tree.children[0])
-        right_r, right_steps = explain_tree(tree.children[1])
-
-        regex = f"({left_r}|{right_r})"
-
-        steps = []
-        steps.extend(left_steps)
-        steps.extend(right_steps)
-        steps.append(Fore.YELLOW + f"or → alternativa: {regex}")
-
-        return regex, steps
-
-    # ------------------------------------------------------------
-    # repeated_term → combinación de term + repetición
-    # ------------------------------------------------------------
-    if nodetype == "repeated_term":
-        children = tree.children
-
-        # sin repetición
-        if len(children) == 1:
-            return explain_tree(children[0])
-
-        steps = []
         parts = []
-
-        for c in children:
-            r, s = explain_tree(c)
+        steps = []
+        for ch in tree.children:
+            r, s = explain_tree(ch)
             parts.append(r)
             steps.extend(s)
+        final = "".join(parts)
+        steps.append(Fore.YELLOW + f"sequence → concatenación: {final}")
+        return final, steps
 
-        regex = "".join(parts)
-        steps.append(Fore.YELLOW + f"repeated term → {regex}")
+    # ---------- OR ----------
+    if nodetype == "or_expr":
+        left, s1 = explain_tree(tree.children[0])
+        right, s2 = explain_tree(tree.children[1])
+        r = f"({left}|{right})"
+        return r, s1 + s2 + [Fore.YELLOW + f"or → alternativa: {r}"]
 
-        return regex, steps
+    # ---------- REPEATED TERM ----------
+    if nodetype == "repeated_term":
+        steps = []
+        parts = []
+        for ch in tree.children:
+            r, s = explain_tree(ch)
+            parts.append(r)
+            steps.extend(s)
+        r = "".join(parts)
+        steps.append(Fore.YELLOW + f"repeated term → {r}")
+        return r, steps
 
-    # ------------------------------------------------------------
-    # group → (contenido)rep?
-    # ------------------------------------------------------------
+    # ---------- GROUP ----------
     if nodetype == "group":
-        seq_tree = tree.children[0]
-        seq_r, seq_steps = explain_tree(seq_tree)
+        seq_r, seq_steps = explain_tree(tree.children[0])
+        steps = seq_steps.copy()
 
-        steps = list(seq_steps)
-
-        # grupo sin repetición
         if len(tree.children) == 1:
-            regex = f"({seq_r})"
-            steps.append(Fore.YELLOW + f"group → ({seq_r})")
-            return regex, steps
+            r = f"({seq_r})"
+            steps.append(Fore.YELLOW + f"group → {r}")
+            return r, steps
 
-        # con repetición
-        rep_tree = tree.children[1]
-        rep_r, rep_steps = explain_tree(rep_tree)
+        rep_r, rep_steps = explain_tree(tree.children[1])
         steps.extend(rep_steps)
 
-        regex = f"({seq_r}){rep_r}"
-        steps.append(Fore.YELLOW + f"group repeated → {regex}")
+        r = f"({seq_r}){rep_r}"
+        steps.append(Fore.YELLOW + f"group with repetition → {r}")
+        return r, steps
 
-        return regex, steps
-
-    if nodetype == "t_vowel":
-        return "[aeiouAEIOU]", ["vowel → [aeiouAEIOU]"]
-
-    if nodetype == "t_consonant":
-        return "[b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]", ["consonant → (all consonants)"]
-
-    if nodetype == "t_word":
-        return r"\w", ["word character → \\w"]
-
-    if nodetype == "t_alnum":
-        return "[A-Za-z0-9]", ["alphanumeric → [A-Za-z0-9]"]
-
-    if nodetype == "t_hex":
-        return "[0-9A-Fa-f]", ["hex digit → [0-9A-Fa-f]"]
-
-    if nodetype == "t_nonspace":
-        return r"\S", ["non whitespace → \\S"]
-
-    # fallback (no debería ocurrir)
-    return "", [Fore.RED + f"No sé explicar nodo: {nodetype}"]  
+    # Fallback
+    return "", [Fore.RED + f"⚠ nodo no reconocido: {nodetype}"]

@@ -4,25 +4,19 @@ from utils import validate_regex, simplify_regex
 
 
 def test_case(phrase, expected=None, verbose=False):
-    """
-    Ejecuta un caso de prueba:
-    - Traduce frase → regex
-    - Verifica sintaxis
-    - Compara con regex esperada (si se proporciona)
-    """
-
     regex = translate_to_regex(phrase)
-
     ok = True
     msg = ""
 
     if regex.startswith("ERROR"):
         ok = False
         msg = regex
+
     elif not validate_regex(regex):
         ok = False
         msg = "Regex inválida generada."
-    elif expected is not None and simplif(regex) != simplify_regex(expected):
+
+    elif expected is not None and simplify_regex(regex) != simplify_regex(expected):
         ok = False
         msg = f"Esperado: {expected}, obtenido: {regex}"
 
@@ -36,6 +30,7 @@ def test_case(phrase, expected=None, verbose=False):
         print("   Normalizado:", normalize_text(phrase))
         print("   Regex final:", regex)
         print()
+
 
 
 # ============================================================
@@ -53,9 +48,8 @@ BASIC_TESTS = [
 ]
 
 RANGE_TESTS = [
-    ("letter between 'a' and 'f'", "[a-f]"),
-    ("character between 'm' and 'z' one or more", "[m-z]+"),
-    ("digit followed by letter between 'a' and 'c' times", "[0-9][a-c]{1}")  # expected revisable
+    ("range 'a' to 'f'", "[a-f]"),
+    ("range 'm' to 'z' one or more", "[m-z]+"),
 ]
 
 GROUP_TESTS = [
@@ -64,15 +58,15 @@ GROUP_TESTS = [
 ]
 
 ERROR_TESTS = [
-    ("digit followedby letter", None),  # error esperado
+    ("digit followedby letter", None),
     ("3 times digit", None),
-    ("letter between 'z' and 'a'", None),  # rango invertido → error futuro
+    ("range 'z' to 'a'", None),  # rango invertido → debe fallar semánticamente
 ]
 
 VOWEL_TESTS = [
-    ("vowel", "[aeiouAEIOU]"),
-    ("vowels", "[aeiouAEIOU]+"),
-    ("vowel followed by consonant", "[aeiouAEIOU][b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]"),
+    ("vowel", "[AEIOUaeiou]"),
+    ("vowels", "[AEIOUaeiou]+"),
+    ("vowel followed by consonant", "[AEIOUaeiou][BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]"),
 ]
 
 HEX_TESTS = [
@@ -91,7 +85,6 @@ ALNUM_TESTS = [
 NONSPACE_TESTS = [
     ("non whitespace one or more", r"\S+"),
 ]
-
 
 
 # ============================================================
@@ -118,16 +111,15 @@ if __name__ == "__main__":
     print("\n=== PRUEBAS DE ERRORES ESPERADOS ===")
     for phrase, expected in ERROR_TESTS:
         test_case(phrase, expected, args.verbose)
-    
-    print("\n=== PRUEBAS DE NUMEROS EN INGLES ===")
+
+    print("\n=== PRUEBAS DE NÚMEROS EN INGLÉS ===")
     tests_num = [
         ("digit twenty times", "[0-9]{20}"),
         ("letter seventy two times", "[a-zA-Z]{72}"),
         ("digit one hundred and five times", "[0-9]{105}"),
         ("digit two thousand and eight times", "[0-9]{2008}"),
         ("hex digit three hundred forty one times", "[0-9A-Fa-f]{341}"),
-    ]   
+    ]
 
     for phrase, expected in tests_num:
         test_case(phrase, expected, args.verbose)
-

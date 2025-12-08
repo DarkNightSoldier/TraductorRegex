@@ -1,7 +1,7 @@
 start: expr
 
 ?expr: sequence
-     | sequence "or" expr -> or_expr
+     | sequence "or" expr     -> or_expr
 
 sequence: element ( "followed by" element )*
 
@@ -12,35 +12,28 @@ group: "group" sequence "end group" repetition?
 
 repeated_term: repetition? term repetition?
 
-term: base_term "except" base_term -> t_except
-    | base_term
+term: base_term
+    | base_term "except" base_term   -> t_except
+    | range_expr                     -> t_range
 
-base_term: 
-      "letter"                -> t_letter
-    | "digit"                 -> t_digit
-    | "space"                 -> t_space
-    | "any character"         -> t_any
-    | "uppercase letter"      -> t_upper
-    | "lowercase letter"      -> t_lower
-    | "vowel"                 -> t_vowel
-    | "consonant"             -> t_consonant
-    | "word character"        -> t_word
-    | "alphanumeric"          -> t_alnum
-    | "hex digit"             -> t_hex
-    | "whitespace"            -> t_space      // alias
-    | "non whitespace"        -> t_nonspace
-    | CHAR_LITERAL            -> t_char
-    | STRING_LITERAL          -> t_string
-    | "vowel"            -> t_vowel
-    | "consonant"        -> t_consonant
-    | "alphanumeric"     -> t_alphanumeric
-    | "whitespace"       -> t_whitespace
-    | "non whitespace"   -> t_non_whitespace
-    | "hex digit"        -> t_hex
+base_term:
+      "letter"             -> t_letter
+    | "digit"              -> t_digit
+    | "space"              -> t_space
+    | "any character"      -> t_any
+    | "uppercase letter"   -> t_upper
+    | "lowercase letter"   -> t_lower
+    | "vowel"              -> t_vowel
+    | "consonant"          -> t_consonant
+    | "alphanumeric"       -> t_alphanumeric
+    | "word character"     -> t_word
+    | "hex digit"          -> t_hex
+    | "whitespace"         -> t_whitespace
+    | "non whitespace"     -> t_non_whitespace
+    | CHAR_LITERAL         -> t_char
+    | STRING_LITERAL       -> t_string
 
-
-
-range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL -> t_range
+range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL
 
 repetition: INT "times"                     -> r_exact
           | "between" INT "and" INT "times" -> r_range

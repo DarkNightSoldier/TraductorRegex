@@ -43,7 +43,7 @@ def words_to_number(words):
 
         elif w in SCALES:
             if current == 0:
-                # Evitar "hundred" sin prefijo
+                # Evitar "hundred" sin prefijo ("hundred" → 100)
                 current = 1
             current *= SCALES[w]
             total += current
@@ -63,7 +63,6 @@ def convert_numwords(text):
     Busca secuencias numéricas en inglés y las reemplaza por enteros.
     Ejemplo: "one hundred twenty three times" → "123 times"
     """
-
     tokens = text.split()
     result = []
     buffer = []
@@ -81,13 +80,11 @@ def convert_numwords(text):
         # ¿Es parte de un número?
         if w in NUMWORDS_SIMPLE or w in TENS or w in SCALES or w == "and":
             buffer.append(w)
-
         else:
             if buffer:
                 result.append(flush_buffer())
                 buffer = []
             result.append(w)
-
         i += 1
 
     # vaciar buffer final
@@ -116,20 +113,25 @@ class Normalizer:
     }
 
     SYNONYMS = {
+        # básicos
         "digits": "digit one or more",
         "numbers": "digit one or more",
         "letters": "letter one or more",
         "characters": "any character one or more",
 
+        # mayúsculas/minúsculas
         "lowercase letters": "lowercase letter one or more",
         "uppercase letters": "uppercase letter one or more",
 
+        # espacios
         "spaces": "space one or more",
         "space characters": "space one or more",
 
+        # whitespace explícito
         "whitespace": "whitespace one or more",
         "whitespaces": "whitespace one or more",
 
+        # nuevas clases semánticas
         "vowels": "vowel one or more",
         "consonants": "consonant one or more",
 
@@ -137,6 +139,10 @@ class Normalizer:
         "hex digits": "hex digit one or more",
 
         "non whitespaces": "non whitespace one or more",
+
+        # word characters
+        "word characters": "word character one or more",
+        "non whitespace characters": "non whitespace one or more",
     }
 
     def normalize(self, text):
@@ -152,6 +158,7 @@ class Normalizer:
         text = re.sub(r"\bthrice\b", "3 times", text)
 
         # ---------------- SYNONYMS -----------------
+        # (orden de inserción respeta claves más largas primero donde aplica)
         for src, tgt in self.SYNONYMS.items():
             text = text.replace(src, tgt)
 
@@ -182,24 +189,26 @@ class Normalizer:
         )
 
         # ----------- FIXES ESTRUCTURALES ---------------------------
+        # Lista de tokens de clase soportados
+        cls = r"(digit|letter|lowercase letter|uppercase letter|any character|space|vowel|consonant|alphanumeric|word character|whitespace|non whitespace|hex digit)"
 
         #  FIX 1 — "3 digit one or more" → "digit 3 times"
         text = re.sub(
-            r"\b(\d+)\s+(digit|letter|lowercase letter|uppercase letter|any character|space)\s+one or more\b",
+            rf"\b(\d+)\s+{cls}\s+one or more\b",
             r"\2 \1 times",
             text
         )
 
         #  FIX 2 — "digit one or more N times" → "digit N times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more (\d+) times",
+            rf"{cls} one or more (\d+) times",
             r"\1 \2 times",
             text
         )
 
         #  FIX 3 — "digit one or more between X and Y times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more between (\d+) and (\d+) times",
+            rf"{cls} one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
@@ -212,7 +221,7 @@ class Normalizer:
 
         #  FIX 6 — "X one or more twice" → "X 2 times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more twice",
+            rf"{cls} one or more twice",
             r"\1 2 times",
             text
         )
@@ -224,9 +233,9 @@ class Normalizer:
             text
         )
 
-        #  FIX 8 — "X one or more between A and B times"
+        #  FIX 8 — "X one or more between A and B times" → "X between A and B times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more between (\d+) and (\d+) times",
+            rf"{cls} one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
