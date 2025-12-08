@@ -110,3 +110,21 @@ class RegexTranslator(Transformer):
     # ---------- START ----------
     def start(self, children):
         return children[0]
+
+        def t_vowel(self, _):
+        return "[aeiouAEIOU]"
+
+    def t_consonant(self, _):
+        return "[b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]"
+
+    def t_word(self, _):
+        return r"\w"
+
+    def t_alnum(self, _):
+        return "[A-Za-z0-9]"
+
+    def t_hex(self, _):
+        return "[0-9A-Fa-f]"
+
+    def t_nonspace(self, _):
+        return r"\S"
