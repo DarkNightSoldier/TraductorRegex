@@ -74,23 +74,102 @@ def reorder_char_classes(regex: str) -> str:
 
 
 # ===============================================================
+#  OPTIMIZACIONES SEMÁNTICAS
+# ===============================================================
+
+def collapse_A_Astar(regex: str) -> str:
+    """
+    Simplifica A A* → A+
+    """
+    # Caso clase de caracteres: [a-z][a-z]*
+    regex = re.sub(r'(\[[^\]]+\])\1\*', r'\1+', regex)
+
+    # Caso literal/grupo simple: (X)(X)*
+    regex = re.sub(r'(\([^\)]+\))\1\*', r'\1+', regex)
+
+    # Caso token simple: a a*
+    regex = re.sub(r'([a-zA-Z0-9])\1\*', r'\1+', regex)
+
+    return regex
+
+
+def collapse_A_Aplus(regex: str) -> str:
+    """
+    Simplifica A A+ → A{2,}
+    """
+    # Caso clase de caracteres
+    regex = re.sub(r'(\[[^\]]+\])\1\+', r'\1{2,}', regex)
+
+    # Caso grupo simple
+    regex = re.sub(r'(\([^\)]+\))\1\+', r'\1{2,}', regex)
+
+    return regex
+
+
+def collapse_Aexact_Aexact(regex: str) -> str:
+    """
+    Simplifica A{m} A{n} → A{m+n}
+    """
+    def repl(m):
+        token = m.group(1)
+        m1 = int(m.group(2))
+        m2 = int(m.group(3))
+        return f"{token}{{{m1+m2}}}"
+
+    return re.sub(r'(\[[^\]]+\])\{(\d+)\}\1\{(\d+)\}', repl, regex)
+
+
+def collapse_Aexact_Astar(regex: str) -> str:
+    """
+    Simplifica A{m} A* → A{m,}
+    """
+    return re.sub(r'(\[[^\]]+\])\{(\d+)\}\1\*', r'\1{\2,}', regex)
+
+
+def remove_redundant_one(regex: str) -> str:
+    """
+    Quita {1} → vacío.
+    """
+    regex = re.sub(r'\{1\}', '', regex)
+    return regex
+
+
+def collapse_group_plus(regex: str) -> str:
+    """
+    Simplifica (X)+ → X+  cuando X es simple.
+    """
+    # si es un token simple o clase de caracteres
+    regex = re.sub(r'\((\[[^\]]+\])\)\+', r'\1+', regex)
+    regex = re.sub(r'\(([a-zA-Z0-9])\)\+', r'\1+', regex)
+    return regex
+
+
+
+# ===============================================================
 #  OPTIMIZADOR PRINCIPAL
 # ===============================================================
 
 def simplify_regex(regex: str) -> str:
-    """
-    Simplificación avanzada de regex.
-    """
 
     old = None
     new = regex
 
-    # Ejecutar optimizaciones repetidamente hasta que no cambie más
     while new != old:
         old = new
+
+        
         new = simplify_parentheses(new)
         new = collapse_repetitions(new)
         new = simplify_or(new)
         new = reorder_char_classes(new)
 
+       
+        new = collapse_A_Astar(new)
+        new = collapse_A_Aplus(new)
+        new = collapse_Aexact_Aexact(new)
+        new = collapse_Aexact_Astar(new)
+        new = remove_redundant_one(new)
+        new = collapse_group_plus(new)
+
     return new
+
