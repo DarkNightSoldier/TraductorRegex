@@ -1,9 +1,7 @@
 import re
 
 def validate_regex(regex: str) -> bool:
-    """
-    Valida si una expresión regular es sintácticamente correcta.
-    """
+    """Valida si una expresión regular es sintácticamente correcta."""
     try:
         re.compile(regex)
         return True
@@ -11,75 +9,88 @@ def validate_regex(regex: str) -> bool:
         return False
 
 
-# ============================================================
-#  REGEX SIMPLIFIER — SAFE HEURISTICS
-# ============================================================
+# ===============================================================
+#  OPTIMIZADORES INTERNOS
+# ===============================================================
+
+def simplify_parentheses(regex: str) -> str:
+    """
+    Elimina paréntesis innecesarios como:
+      (a) → a
+      ([0-9]) → [0-9]
+    """
+    # (X) where X has no operators that require grouping
+    regex = re.sub(r'\((\[[^\]]+\])\)', r'\1', regex)
+    regex = re.sub(r'\(([a-zA-Z0-9])\)', r'\1', regex)
+    return regex
+
+
+def collapse_repetitions(regex: str) -> str:
+    """
+    Convierte secuencias repetidas en {n}
+    Ej: [0-9][0-9][0-9] → [0-9]{3}
+    """
+    pattern = r'(\[[^\]]+\])\1+'
+    def replacer(match):
+        token = match.group(1)
+        count = len(match.group(0)) // len(token)
+        return f"{token}{{{count}}}"
+    return re.sub(pattern, replacer, regex)
+
+
+def simplify_or(regex: str) -> str:
+    """
+    Convierte (a|b|c) en [abc] cuando sea posible.
+    Convierte ([0-9]|[1-9]) en [0-9]
+    """
+    # Primer caso: literales simples
+    regex = re.sub(
+        r'\((?:([a-zA-Z0-9])\|)+([a-zA-Z0-9])\)',
+        lambda m: "[" + "".join(m.group(0).replace("(", "").replace(")", "").split("|")) + "]",
+        regex
+    )
+
+    # Segundo caso: clases de dígitos
+    regex = re.sub(
+        r'\(\[0-9\]\|\[1-9\]\)',
+        r"[0-9]",
+        regex
+    )
+
+    return regex
+
+
+def reorder_char_classes(regex: str) -> str:
+    """
+    Ordena caracteres dentro de clases:
+    Ej: [zaq] → [aqz]
+    """
+    def repl(m):
+        chars = list(m.group(1))
+        chars = sorted(set(chars))
+        return "[" + "".join(chars) + "]"
+
+    return re.sub(r'\[([a-zA-Z0-9]+)\]', repl, regex)
+
+
+# ===============================================================
+#  OPTIMIZADOR PRINCIPAL
+# ===============================================================
 
 def simplify_regex(regex: str) -> str:
     """
-    Simplificador avanzado y seguro para regex generadas.
-    NO altera la semántica. Solo elimina redundancias comunes.
+    Simplificación avanzada de regex.
     """
 
-    # -------------------------------------------
-    # S0: Limpiezas básicas ya existentes
-    # -------------------------------------------
-    regex = regex.replace("((", "(").replace("))", ")")
-    regex = regex.replace("([", "[").replace("])", "]")
+    old = None
+    new = regex
 
-    # Eliminar paréntesis externos si no son necesarios
-    if regex.startswith("(") and regex.endswith(")"):
-        inner = regex[1:-1]
-        if "(" not in inner and ")" not in inner and "|" not in inner:
-            regex = inner
+    # Ejecutar optimizaciones repetidamente hasta que no cambie más
+    while new != old:
+        old = new
+        new = simplify_parentheses(new)
+        new = collapse_repetitions(new)
+        new = simplify_or(new)
+        new = reorder_char_classes(new)
 
-    # -------------------------------------------
-    # S1–S4: Simplificar repeticiones básicas
-    # -------------------------------------------
-
-    # X{1} → X
-    regex = re.sub(r"(\[[^\]]+\]|\w|\.)\{1\}", r"\1", regex)
-
-    # X{0} → "" (cadena vacía)
-    regex = re.sub(r"(\[[^\]]+\]|\w|\.)\{0\}", r"", regex)
-
-    # X{0,1} → X?
-    regex = re.sub(r"(\[[^\]]+\]|\w|\.)\{0,1\}", r"\1?", regex)
-
-    # X{1,} → X+
-    regex = re.sub(r"(\[[^\]]+\]|\w|\.)\{1,\}", r"\1+", regex)
-
-    # -------------------------------------------
-    # S5–S6: [a-z][a-z]* → [a-z]+ 
-    # -------------------------------------------
-
-    regex = re.sub(r"(\[[^\]]+\])\1\*", r"\1+", regex)
-    regex = re.sub(r"(\[[^\]]+\])\1\+", r"\1+", regex)
-
-    # -------------------------------------------
-    # S7: [a-z]{n}[a-z]{m} → [a-z]{n+m}
-    # -------------------------------------------
-
-    def merge_repetitions(match):
-        cls = match.group(1)
-        n = int(match.group(2))
-        m = int(match.group(3))
-        return f"{cls}{{{n+m}}}"
-
-    regex = re.sub(r"(\[[^\]]+\])\{(\d+)\}\1\{(\d+)\}", merge_repetitions, regex)
-
-    # -------------------------------------------
-    # S8–S9: Eliminar paréntesis innecesarios
-    # -------------------------------------------
-    # (X) → X si X es simple
-    regex = re.sub(r"\((\[[^\]]+\])\)", r"\1", regex)
-
-    # ([a-z])* → [a-z]*
-    regex = re.sub(r"\((\[[^\]]+\])\)([\*\+\?]|\{\d+(,\d+)?\})", r"\1\2", regex)
-
-    # -------------------------------------------
-    # S10: Dobles paréntesis extra
-    # -------------------------------------------
-    regex = regex.replace("((", "(").replace("))", ")")
-
-    return regex
+    return new
