@@ -3,32 +3,90 @@ from lark import Transformer
 class RegexTranslator(Transformer):
 
     # ---------- BASE TERMS ----------
-    def t_letter(self, _): return "[a-zA-Z]"
-    def t_digit(self, _): return "[0-9]"
-    def t_space(self, _): return r"\s"
-    def t_any(self, _):   return "."
+    def t_letter(self, _):
+        return "[a-zA-Z]"
 
-    def t_upper(self, _): return "[A-Z]"
-    def t_lower(self, _): return "[a-z]"
+    def t_digit(self, _):
+        return "[0-9]"
+
+    def t_space(self, _):
+        # "space" en tu DSL lo tratamos como whitespace genérico
+        return r"\s"
+
+    def t_any(self, _):
+        return "."
+
+    def t_upper(self, _):
+        return "[A-Z]"
+
+    def t_lower(self, _):
+        return "[a-z]"
+
+    def t_vowel(self, _):
+        return "[AEIOUaeiou]"
+
+    def t_consonant(self, _):
+        # Todas las consonantes inglesas explícitas
+        return "[BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]"
+
+    def t_alphanumeric(self, _):
+        return "[A-Za-z0-9]"
+
+    def t_word(self, _):
+        # Aquí sí queremos \w explícitamente para "word character"
+        return r"\w"
+
+    def t_hex(self, _):
+        return "[0-9A-Fa-f]"
+
+    def t_whitespace(self, _):
+        return r"\s"
+
+    def t_non_whitespace(self, _):
+        return r"\S"
+
+    def t_range(self, children):
+        # children son dos CHAR_LITERAL tipo "'a'", "'z'"
+        c1 = children[0][1:-1]
+        c2 = children[1][1:-1]
+        return f"[{c1}-{c2}]"
 
     def t_char(self, tok):
+        # tok es un Token con valor "'a'" → nos quedamos con a
         return tok[0][1:-1]
 
     def t_string(self, tok):
+        # "'hello'" → "hello"
         return tok[0][1:-1]
 
     # ---------- NEGATION ----------
     def t_except(self, children):
         base, neg = children
-        neg_inside = neg.strip("[]")
+        # Por ahora ignoramos 'base' y tomamos el complemento de 'neg'
+        neg_inside = str(neg).strip("[]")
         return f"[^{neg_inside}]"
 
     # ---------- REPETITIONS ----------
-    def r_optional(self, _):     return "?"
-    def r_one_or_more(self, _): return "+"
-    def r_zero_or_more(self, _):return "*"
-    def r_exact(self, children): return f"{{{children[0]}}}"
-    def r_range(self, children): return f"{{{children[0]},{children[1]}}}"
+    def r_optional(self, _):
+        return "?"
+
+    def r_one_or_more(self, _):
+        return "+"
+
+    def r_zero_or_more(self, _):
+        return "*"
+
+    def r_exact(self, children):
+        return f"{{{children[0]}}}"
+
+    def r_range(self, children):
+        return f"{{{children[0]},{children[1]}}}"
+
+    def r_at_least(self, children):
+        return f"{{{children[0]},}}"
+
+    def r_at_most(self, children):
+        return f"{{0,{children[0]}}}"
 
     # ---------- TERM ----------
     def term(self, children):
@@ -40,14 +98,12 @@ class RegexTranslator(Transformer):
     # ---------- REPEATED TERM ----------
     def repeated_term(self, children):
         """
-        children may be:
-        [term]
-        [rep_before, term]
-        [term, rep_after]
-        [rep_before, term, rep_after]
+        children puede ser:
+          [term]
+          [rep_before, term]
+          [term, rep_after]
+          [rep_before, term, rep_after]
         """
-
-        # Convert Trees to strings
         children = [str(c) for c in children]
 
         if len(children) == 1:
@@ -56,8 +112,10 @@ class RegexTranslator(Transformer):
         if len(children) == 2:
             a, b = children
             rep_symbols = ["?", "+", "*"]
+            # a = repetición antes del término
             if a.startswith("{") or a in rep_symbols:
                 return b + a
+            # a = término, b = repetición
             return a + b
 
         if len(children) == 3:
@@ -71,6 +129,7 @@ class RegexTranslator(Transformer):
         children = [str(c) for c in children]
         if len(children) == 1:
             return "(" + children[0] + ")"
+        # children[1] suele ser la repetición (ej. {2}, +, ?, etc.)
         return "(" + children[0] + ")" + children[1]
 
     # ---------- SEQUENCE ----------
