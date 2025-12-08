@@ -26,6 +26,12 @@ class Normalizer:
         "whitespaces": "space one or more",
         "space character": "space",
         "space characters": "space one or more",
+        "vowels": "vowel one or more",
+        "consonants": "consonant one or more",
+        "alphanumerics": "alphanumeric one or more",
+        "hex digits": "hex digit one or more",
+        "whitespaces": "whitespace one or more",
+        "non whitespaces": "non whitespace one or more",
     }
 
     NUMWORDS = {
