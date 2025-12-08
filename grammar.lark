@@ -15,20 +15,31 @@ repeated_term: repetition? term repetition?
 term: base_term "except" base_term -> t_except
     | base_term
 
-base_term: "letter"        -> t_letter
-         | "digit"         -> t_digit
-         | "space"         -> t_space
-         | "any character" -> t_any
-         | "uppercase letter" -> t_upper
-         | "lowercase letter" -> t_lower
-         | CHAR_LITERAL    -> t_char
-         | STRING_LITERAL  -> t_string
+base_term: "letter"              -> t_letter
+         | "digit"               -> t_digit
+         | "space"               -> t_space
+         | "any character"       -> t_any
+         | "uppercase letter"    -> t_upper
+         | "lowercase letter"    -> t_lower
+         | "vowel"               -> t_vowel
+         | "consonant"           -> t_consonant
+         | "word character"      -> t_word
+         | "alphanumeric"        -> t_alnum
+         | "hex digit"           -> t_hex
+         | "whitespace"          -> t_ws
+         | range_expr
+         | CHAR_LITERAL          -> t_char
+         | STRING_LITERAL        -> t_string
 
-repetition: INT "times"                  -> r_exact
+range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL -> t_range
+
+repetition: INT "times"                     -> r_exact
           | "between" INT "and" INT "times" -> r_range
-          | "one or more"                -> r_one_or_more
-          | "zero or more"               -> r_zero_or_more
-          | "optional"                   -> r_optional
+          | "one or more"                   -> r_one_or_more
+          | "zero or more"                  -> r_zero_or_more
+          | "optional"                      -> r_optional
+          | "at least" INT "times"          -> r_at_least
+          | "at most" INT "times"           -> r_at_most
 
 CHAR_LITERAL: "'" /[^']/ "'"
 STRING_LITERAL: "'" /[^']*/ "'"
