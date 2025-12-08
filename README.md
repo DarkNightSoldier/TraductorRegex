@@ -1,7 +1,7 @@
 # TraductorRegex 
 ### DSL pseudonatural en inglés → Expresiones Regulares
 
-**Integrantes:** Juan Antonio Rodríguez Ruiz, Manuel Fernando Valle Amorteguí, Ivan Gabriel Aranguren Rengifo, Alejandro Higuera Castro
+**Integrantes:** Juan Antonio Rodríguez Rubio, Manuel Fernando Valle Amorteguí, Ivan Gabriel Aranguren Rengifo, Alejandro Higuera Castro
 
 Proyecto del curso de Compiladores
 
