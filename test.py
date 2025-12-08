@@ -69,6 +69,29 @@ ERROR_TESTS = [
     ("letter between 'z' and 'a'", None),  # rango invertido → error futuro
 ]
 
+VOWEL_TESTS = [
+    ("vowel", "[aeiouAEIOU]"),
+    ("vowels", "[aeiouAEIOU]+"),
+    ("vowel followed by consonant", "[aeiouAEIOU][b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]"),
+]
+
+HEX_TESTS = [
+    ("hex digit", "[0-9A-Fa-f]"),
+    ("hex digits", "[0-9A-Fa-f]+"),
+]
+
+WORD_TESTS = [
+    ("word character one or more", r"\w+"),
+]
+
+ALNUM_TESTS = [
+    ("alphanumeric 3 times", "[A-Za-z0-9]{3}"),
+]
+
+NONSPACE_TESTS = [
+    ("non whitespace one or more", r"\S+"),
+]
+
 
 # ============================================================
 # MAIN
