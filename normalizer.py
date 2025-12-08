@@ -37,18 +37,26 @@ def words_to_number(words):
 
         if w in NUMWORDS_SIMPLE:
             current += NUMWORDS_SIMPLE[w]
+
         elif w in TENS:
             current += TENS[w]
+
         elif w in SCALES:
+            if current == 0:
+                # Evitar "hundred" sin prefijo
+                current = 1
             current *= SCALES[w]
             total += current
             current = 0
+
         elif w == "and":
             continue
+
         else:
             return None  # palabra no numérica → abortar
 
     return total + current
+
 
 def convert_numwords(text):
     """
@@ -73,11 +81,13 @@ def convert_numwords(text):
         # ¿Es parte de un número?
         if w in NUMWORDS_SIMPLE or w in TENS or w in SCALES or w == "and":
             buffer.append(w)
+
         else:
             if buffer:
                 result.append(flush_buffer())
                 buffer = []
             result.append(w)
+
         i += 1
 
     # vaciar buffer final
@@ -87,9 +97,13 @@ def convert_numwords(text):
     return " ".join(result)
 
 
+# ===========================================================
+#   NORMALIZADOR PRINCIPAL
+# ===========================================================
+
 class Normalizer:
     """
-    NLP-lite estructural final — COMPLETAMENTE COMPATIBLE
+    NLP-lite estructural final — completamente compatible
     con grammar.lark y translator.py
     """
 
@@ -106,32 +120,23 @@ class Normalizer:
         "numbers": "digit one or more",
         "letters": "letter one or more",
         "characters": "any character one or more",
+
         "lowercase letters": "lowercase letter one or more",
         "uppercase letters": "uppercase letter one or more",
+
         "spaces": "space one or more",
-        "whitespace": "space one or more",
-        "whitespaces": "space one or more",
-        "space character": "space",
         "space characters": "space one or more",
+
+        "whitespace": "whitespace one or more",
+        "whitespaces": "whitespace one or more",
+
         "vowels": "vowel one or more",
         "consonants": "consonant one or more",
+
         "alphanumerics": "alphanumeric one or more",
         "hex digits": "hex digit one or more",
-        "whitespaces": "whitespace one or more",
-        "non whitespaces": "non whitespace one or more",
-    }
 
-    NUMWORDS = {
-        "one": 1,
-        "two": 2,
-        "three": 3,
-        "four": 4,
-        "five": 5,
-        "six": 6,
-        "seven": 7,
-        "eight": 8,
-        "nine": 9,
-        "ten": 10,
+        "non whitespaces": "non whitespace one or more",
     }
 
     def normalize(self, text):
@@ -150,10 +155,6 @@ class Normalizer:
         for src, tgt in self.SYNONYMS.items():
             text = text.replace(src, tgt)
 
-        # ---------------- NUMWORDS -----------------
-        for w, n in self.NUMWORDS.items():
-            text = re.sub(fr"\b{w}\b", str(n), text)
-
         # ---------------- CONNECTORS ----------------
         text = text.replace(" then ", " followed by ")
         text = text.replace(" next ", " followed by ")
@@ -167,10 +168,10 @@ class Normalizer:
         text = re.sub(r"appear(ed)?", "one or more", text)
         text = re.sub(r"repeat(ed)?", "one or more", text)
 
-        # --- REEMPLAZAR NÚMEROS EN INGLÉS POR ENTEROS ---
+        # ---------------- NÚMEROS EN INGLÉS → ENTEROS --------------
         text = convert_numwords(text)
 
-        # ---------------- SANITY CLEANUP ------------
+        # ---------------- SANITY CLEANUP ---------------------------
         text = text.replace("1 or more", "one or more")
 
         # ---------------- BETWEEN --------------------
@@ -179,6 +180,8 @@ class Normalizer:
             r"between \1 and \2 times",
             text
         )
+
+        # ----------- FIXES ESTRUCTURALES ---------------------------
 
         #  FIX 1 — "3 digit one or more" → "digit 3 times"
         text = re.sub(
@@ -201,7 +204,7 @@ class Normalizer:
             text
         )
 
-        #  FIX 4 — "one or more one or more" → "one or more"
+        #  FIX 4 — redundancia de "one or more"
         text = text.replace("one or more one or more", "one or more")
 
         #  FIX 5 — "except digit one or more" → "except digit"
@@ -221,16 +224,14 @@ class Normalizer:
             text
         )
 
-        # FIX 8 — "X one or more between A and B times" → "X between A and B times"
+        #  FIX 8 — "X one or more between A and B times"
         text = re.sub(
             r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
 
-        # ---------------- FINAL CLEANUP --------------
+        # ---------------- LIMPIEZA FINAL ---------------------------
         text = re.sub(r"\s+", " ", text).strip()
 
         return text
-    
-    
