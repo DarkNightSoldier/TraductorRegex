@@ -9,7 +9,9 @@ class Normalizer:
     STOPWORDS = {
         "the","a","an","this","that","which","who","whom",
         "pattern","sequence","find","match","should","be",
-        "like","consisting","made","up","into","of"
+        "like","consisting","made","up","into","of",
+        "string","strings","regex","regular","expression","expressions",
+        "please"
     }
 
     SYNONYMS = {
@@ -18,7 +20,12 @@ class Normalizer:
         "letters": "letter one or more",
         "characters": "any character one or more",
         "lowercase letters": "lowercase letter one or more",
-        "uppercase letters": "uppercase letter one or more"
+        "uppercase letters": "uppercase letter one or more",
+        "spaces": "space one or more",
+        "whitespace": "space one or more",
+        "whitespaces": "space one or more",
+        "space character": "space",
+        "space characters": "space one or more",
     }
 
     NUMWORDS = {
@@ -26,7 +33,12 @@ class Normalizer:
         "two": 2,
         "three": 3,
         "four": 4,
-        "five": 5
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
     }
 
     def normalize(self, text):
@@ -35,6 +47,11 @@ class Normalizer:
         # ---------------- STOPWORDS ----------------
         words = [w for w in text.split() if w not in self.STOPWORDS]
         text = " ".join(words)
+
+        # ---------------- ONCE / TWICE / THRICE ----------------
+        text = re.sub(r"\bonce\b", "1 times", text)
+        text = re.sub(r"\btwice\b", "2 times", text)
+        text = re.sub(r"\bthrice\b", "3 times", text)
 
         # ---------------- SYNONYMS -----------------
         for src, tgt in self.SYNONYMS.items():
@@ -69,22 +86,21 @@ class Normalizer:
 
         #  FIX 1 — "3 digit one or more" → "digit 3 times"
         text = re.sub(
-            r"\b(\d+)\s+(digit|letter|lowercase letter|uppercase letter|any character)\s+one or more\b",
+            r"\b(\d+)\s+(digit|letter|lowercase letter|uppercase letter|any character|space)\s+one or more\b",
             r"\2 \1 times",
             text
         )
 
-        
         #  FIX 2 — "digit one or more N times" → "digit N times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character) one or more (\d+) times",
+            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more (\d+) times",
             r"\1 \2 times",
             text
         )
 
         #  FIX 3 — "digit one or more between X and Y times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character) one or more between (\d+) and (\d+) times",
+            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
@@ -97,7 +113,7 @@ class Normalizer:
 
         #  FIX 6 — "X one or more twice" → "X 2 times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character) one or more twice",
+            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more twice",
             r"\1 2 times",
             text
         )
@@ -111,7 +127,7 @@ class Normalizer:
 
         # FIX 8 — "X one or more between A and B times" → "X between A and B times"
         text = re.sub(
-            r"(digit|letter|lowercase letter|uppercase letter|any character) one or more between (\d+) and (\d+) times",
+            r"(digit|letter|lowercase letter|uppercase letter|any character|space) one or more between (\d+) and (\d+) times",
             r"\1 between \2 and \3 times",
             text
         )
