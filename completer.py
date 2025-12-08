@@ -15,6 +15,12 @@ TERMS = [
     "hex digit",
     "whitespace",
     "non whitespace",
+    "vowel",
+    "consonant",
+    "alphanumeric",
+    "whitespace",
+    "non whitespace",
+    "hex digit",
 ]
 
 REPETITIONS = [

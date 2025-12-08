@@ -128,3 +128,21 @@ class RegexTranslator(Transformer):
 
     def t_nonspace(self, _):
         return r"\S"
+    
+    def t_vowel(self, _): 
+        return "[AEIOUaeiou]"
+
+    def t_consonant(self, _):
+        return "[BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]"
+
+    def t_alphanumeric(self, _):
+        return "[A-Za-z0-9]"
+
+    def t_whitespace(self, _):
+        return r"\s"
+
+    def t_non_whitespace(self, _):
+        return r"\S"
+
+    def t_hex(self, _):
+        return "[0-9A-Fa-f]"
