@@ -8,6 +8,13 @@ TERMS = [
     "vowel", "consonant", "word character",
     "alphanumeric", "hex digit", "whitespace",
     "range"
+    "vowel",
+    "consonant",
+    "word character",
+    "alphanumeric",
+    "hex digit",
+    "whitespace",
+    "non whitespace",
 ]
 
 REPETITIONS = [
