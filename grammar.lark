@@ -10,11 +10,14 @@ element: group
 
 group: "group" sequence "end group" repetition?
 
+# repetición opcional antes y/o después del término
 repeated_term: repetition? term repetition?
 
-term: base_term
-    | base_term "except" base_term   -> t_except
+term: base_term "except" base_term   -> t_except
+    | base_term
     | range_expr                     -> t_range
+
+# ---------- TERMINOS BASE (CLASES Y LITERALES) ----------
 
 base_term: "letter"             -> t_letter
          | "digit"              -> t_digit
