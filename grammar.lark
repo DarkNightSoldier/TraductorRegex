@@ -15,21 +15,23 @@ repeated_term: repetition? term repetition?
 term: base_term "except" base_term -> t_except
     | base_term
 
-base_term: "letter"              -> t_letter
-         | "digit"               -> t_digit
-         | "space"               -> t_space
-         | "any character"       -> t_any
-         | "uppercase letter"    -> t_upper
-         | "lowercase letter"    -> t_lower
-         | "vowel"               -> t_vowel
-         | "consonant"           -> t_consonant
-         | "word character"      -> t_word
-         | "alphanumeric"        -> t_alnum
-         | "hex digit"           -> t_hex
-         | "whitespace"          -> t_ws
-         | range_expr
-         | CHAR_LITERAL          -> t_char
-         | STRING_LITERAL        -> t_string
+base_term: 
+      "letter"                -> t_letter
+    | "digit"                 -> t_digit
+    | "space"                 -> t_space
+    | "any character"         -> t_any
+    | "uppercase letter"      -> t_upper
+    | "lowercase letter"      -> t_lower
+    | "vowel"                 -> t_vowel
+    | "consonant"             -> t_consonant
+    | "word character"        -> t_word
+    | "alphanumeric"          -> t_alnum
+    | "hex digit"             -> t_hex
+    | "whitespace"            -> t_space      // alias
+    | "non whitespace"        -> t_nonspace
+    | CHAR_LITERAL            -> t_char
+    | STRING_LITERAL          -> t_string
+
 
 range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL -> t_range
 
