@@ -11,6 +11,30 @@ class RegexTranslator(Transformer):
     def t_upper(self, _): return "[A-Z]"
     def t_lower(self, _): return "[a-z]"
 
+    def t_vowel(self, _): 
+        return "[aeiouAEIOU]"
+
+    def t_consonant(self, _):
+        # Todas las consonantes inglesas
+        return "[b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z]"
+
+    def t_word(self, _):
+        return r"\w"
+
+    def t_alnum(self, _):
+        return "[A-Za-z0-9]"
+
+    def t_hex(self, _):
+        return "[0-9A-Fa-f]"
+
+    def t_ws(self, _):
+        return r"\s"
+
+    def t_range(self, children):
+        c1 = children[0][1:-1]
+        c2 = children[1][1:-1]
+        return f"[{c1}-{c2}]"
+
     def t_char(self, tok):
         return tok[0][1:-1]
 
@@ -26,9 +50,15 @@ class RegexTranslator(Transformer):
     # ---------- REPETITIONS ----------
     def r_optional(self, _):     return "?"
     def r_one_or_more(self, _): return "+"
-    def r_zero_or_more(self, _):return "*"
+    def r_zero_or_more(self, _): return "*"
     def r_exact(self, children): return f"{{{children[0]}}}"
     def r_range(self, children): return f"{{{children[0]},{children[1]}}}"
+
+    def r_at_least(self, children):
+        return f"{{{children[0]},}}"
+
+    def r_at_most(self, children):
+        return f"{{0,{children[0]}}}"
 
     # ---------- TERM ----------
     def term(self, children):
@@ -39,14 +69,6 @@ class RegexTranslator(Transformer):
 
     # ---------- REPEATED TERM ----------
     def repeated_term(self, children):
-        """
-        children may be:
-        [term]
-        [rep_before, term]
-        [term, rep_after]
-        [rep_before, term, rep_after]
-        """
-
         # Convert Trees to strings
         children = [str(c) for c in children]
 
