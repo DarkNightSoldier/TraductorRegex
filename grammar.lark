@@ -31,6 +31,13 @@ base_term:
     | "non whitespace"        -> t_nonspace
     | CHAR_LITERAL            -> t_char
     | STRING_LITERAL          -> t_string
+    | "vowel"            -> t_vowel
+    | "consonant"        -> t_consonant
+    | "alphanumeric"     -> t_alphanumeric
+    | "whitespace"       -> t_whitespace
+    | "non whitespace"   -> t_non_whitespace
+    | "hex digit"        -> t_hex
+
 
 
 range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL -> t_range
