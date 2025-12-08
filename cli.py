@@ -2,7 +2,8 @@ import argparse
 import re
 from colorama import Fore, init
 
-from lark_parser import translate_to_regex
+from lark_parser import translate_to_regex, normalizer, parser
+from translator import RegexTranslator
 from completer import DSLCompleter
 from commands import show_help, show_tokens, show_examples
 from explain import explain_phrase_and_regex
@@ -15,27 +16,22 @@ init(autoreset=True)
 
 
 def main():
-    parser = argparse.ArgumentParser(
+    parser_arg = argparse.ArgumentParser(
         description="TraductorRegex – DSL para generar expresiones regulares."
     )
 
-    parser.add_argument("phrase", nargs="?", help="Frase pseudonatural a convertir.")
-    parser.add_argument("--test", help="Cadena para validar contra la Regex.")
-    parser.add_argument("--explain", action="store_true", help="Explica paso a paso la conversión.")
-    parser.add_argument("--interactive", action="store_true", help="Modo interactivo con autocompletado.")
+    parser_arg.add_argument("phrase", nargs="?", help="Frase pseudonatural a convertir.")
+    parser_arg.add_argument("--test", help="Cadena para validar contra la Regex.")
+    parser_arg.add_argument("--explain", action="store_true", help="Explica paso a paso la conversión.")
+    parser_arg.add_argument("--debug", action="store_true", help="Muestra DSL normalizado, AST y regex sin simplificar.")
+    parser_arg.add_argument("--interactive", action="store_true", help="Modo interactivo con autocompletado.")
 
-    args = parser.parse_args()
+    args = parser_arg.parse_args()
 
-    # ---------------------------------------------------------
-    # MODO INTERACTIVO
-    # ---------------------------------------------------------
     if args.interactive:
         run_interactive(args)
         return
 
-    # ---------------------------------------------------------
-    # MODO NORMAL
-    # ---------------------------------------------------------
     if not args.phrase:
         print(Fore.YELLOW + "ERROR: No ingresaste ninguna frase.")
         return
@@ -44,6 +40,52 @@ def main():
 
 
 def run_conversion(phrase, args):
+
+    # --------------------------------------
+    # MODO DEBUG → mostrar salida detallada
+    # --------------------------------------
+    if args.debug:
+        print(Fore.CYAN + "\n=== DEBUG MODE ACTIVADO ===\n")
+
+        print(Fore.GREEN + "Frase original:")
+        print(" ", phrase, "\n")
+
+        # 1. Normalización
+        normalized = normalizer.normalize(phrase)
+        print(Fore.GREEN + "DSL normalizado:")
+        print(" ", normalized, "\n")
+
+        # 2. AST
+        try:
+            tree = parser.parse(normalized)
+            print(Fore.GREEN + "AST generado:")
+            print(tree.pretty(), "\n")
+        except Exception as e:
+            print(Fore.RED + "Error al generar AST:", e)
+            return
+
+        # 3. Regex cruda
+        try:
+            raw_regex = RegexTranslator().transform(tree)
+            print(Fore.GREEN + "Regex cruda generada:")
+            print(" ", raw_regex, "\n")
+        except Exception as e:
+            print(Fore.RED + "Error durante traducción a regex:", e)
+            return
+
+        # 4. Regex final (simplificada)
+        final_regex = simplify_regex(raw_regex)
+        print(Fore.GREEN + "Regex simplificada (final):")
+        print(" ", final_regex, "\n")
+
+        if args.test:
+            test_regex(final_regex, args.test)
+
+        return
+
+    # --------------------------------------
+    # MODO NORMAL
+    # --------------------------------------
     regex = translate_to_regex(phrase)
     regex = simplify_regex(regex)
 
@@ -73,12 +115,8 @@ def run_interactive(args):
 
     while True:
         phrase = prompt("Frase > ", completer=completer, history=history)
-
         cleaned = phrase.strip().lower()
 
-        # ---------------------------------
-        # DETECCIÓN DE COMANDOS INTERNOS
-        # ---------------------------------
         if cleaned == "exit":
             print(Fore.CYAN + "Saliendo del modo interactivo.")
             break
@@ -95,14 +133,12 @@ def run_interactive(args):
             print(show_tokens())
             continue
 
-        # ---------------------------------
-        # Si no es comando, procesar frase
-        # ---------------------------------
         if not phrase.strip():
             print(Fore.YELLOW + "No escribiste ninguna frase.")
             continue
 
         run_conversion(phrase, args)
+
 
 def test_regex(pattern, text):
     try:
