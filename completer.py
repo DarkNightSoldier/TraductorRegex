@@ -5,11 +5,15 @@ TERMS = [
     "letter", "digit", "space", "any character",
     "uppercase letter", "lowercase letter",
     "'a'", "'b'", "'c'", "'@'", "'1'",
+    "vowel", "consonant", "word character",
+    "alphanumeric", "hex digit", "whitespace",
+    "range"
 ]
 
 REPETITIONS = [
     "optional", "one or more", "zero or more",
-    "times", "between", "and"
+    "times", "between", "and",
+    "at least", "at most"
 ]
 
 CONNECTORS = [
@@ -42,7 +46,8 @@ class DSLCompleter(Completer):
             return
 
         # Si se puso una repetición → sugerir conectores
-        if last in ["optional", "one", "zero", "times", "more", "between", "and"]:
+        if last in ["optional", "one", "zero", "times", "more",
+                    "between", "and", "at", "least", "most"]:
             for w in CONNECTORS:
                 yield Completion(w, start_position=0)
             return
