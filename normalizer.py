@@ -1,5 +1,92 @@
 import re
 
+# ===========================================================
+#   NÚMEROS EN INGLÉS → ENTEROS (ILIMITADOS)
+# ===========================================================
+
+NUMWORDS_SIMPLE = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4,
+    "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+    "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
+    "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
+    "eighteen": 18, "nineteen": 19
+}
+
+TENS = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+    "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90
+}
+
+SCALES = {
+    "hundred": 100,
+    "thousand": 1000,
+    "million": 1000000,
+    "billion": 1000000000
+}
+
+
+def words_to_number(words):
+    """
+    Convierte una lista de palabras de número en inglés a un entero.
+    Ejemplo: ["one","hundred","twenty","three"] → 123
+    """
+    current = 0
+    total = 0
+
+    for w in words:
+
+        if w in NUMWORDS_SIMPLE:
+            current += NUMWORDS_SIMPLE[w]
+        elif w in TENS:
+            current += TENS[w]
+        elif w in SCALES:
+            current *= SCALES[w]
+            total += current
+            current = 0
+        elif w == "and":
+            continue
+        else:
+            return None  # palabra no numérica → abortar
+
+    return total + current
+
+def convert_numwords(text):
+    """
+    Busca secuencias numéricas en inglés y las reemplaza por enteros.
+    Ejemplo: "one hundred twenty three times" → "123 times"
+    """
+
+    tokens = text.split()
+    result = []
+    buffer = []
+
+    def flush_buffer():
+        if not buffer:
+            return None
+        number = words_to_number(buffer)
+        return str(number) if number is not None else " ".join(buffer)
+
+    i = 0
+    while i < len(tokens):
+        w = tokens[i]
+
+        # ¿Es parte de un número?
+        if w in NUMWORDS_SIMPLE or w in TENS or w in SCALES or w == "and":
+            buffer.append(w)
+        else:
+            if buffer:
+                result.append(flush_buffer())
+                buffer = []
+            result.append(w)
+        i += 1
+
+    # vaciar buffer final
+    if buffer:
+        result.append(flush_buffer())
+
+    return " ".join(result)
+
+
 class Normalizer:
     """
     NLP-lite estructural final — COMPLETAMENTE COMPATIBLE
@@ -80,6 +167,9 @@ class Normalizer:
         text = re.sub(r"appear(ed)?", "one or more", text)
         text = re.sub(r"repeat(ed)?", "one or more", text)
 
+        # --- REEMPLAZAR NÚMEROS EN INGLÉS POR ENTEROS ---
+        text = convert_numwords(text)
+
         # ---------------- SANITY CLEANUP ------------
         text = text.replace("1 or more", "one or more")
 
@@ -142,3 +232,5 @@ class Normalizer:
         text = re.sub(r"\s+", " ", text).strip()
 
         return text
+    
+    

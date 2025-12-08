@@ -93,6 +93,7 @@ NONSPACE_TESTS = [
 ]
 
 
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -117,3 +118,16 @@ if __name__ == "__main__":
     print("\n=== PRUEBAS DE ERRORES ESPERADOS ===")
     for phrase, expected in ERROR_TESTS:
         test_case(phrase, expected, args.verbose)
+    
+    print("\n=== PRUEBAS DE NUMEROS EN INGLES ===")
+    tests_num = [
+        ("digit twenty times", "[0-9]{20}"),
+        ("letter seventy two times", "[a-zA-Z]{72}"),
+        ("digit one hundred and five times", "[0-9]{105}"),
+        ("digit two thousand and eight times", "[0-9]{2008}"),
+        ("hex digit three hundred forty one times", "[0-9A-Fa-f]{341}"),
+    ]   
+
+    for phrase, expected in tests_num:
+        test_case(phrase, expected, args.verbose)
+
