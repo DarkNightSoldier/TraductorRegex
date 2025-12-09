@@ -1,6 +1,26 @@
+"""
+Módulo `commands.py`
+
+Define funciones auxiliares para el modo interactivo del CLI:
+
+- show_help()    → imprime la lista de comandos disponibles del REPL.
+- show_examples()→ imprime ejemplos de frases válidas del DSL.
+- show_tokens()  → imprime el “vocabulario” básico del DSL (tokens soportados).
+
+Estas funciones solo devuelven cadenas ya coloreadas con colorama (no imprimen).
+El CLI (`cli.py`) se encarga de llamarlas y hacer `print(...)`.
+"""
+
 from colorama import Fore
 
+
 def show_help():
+    """
+    Devuelve un texto corto con los comandos disponibles en el modo interactivo.
+
+    Se usa cuando el usuario escribe `help` en el REPL.
+    No realiza ningún I/O por sí mismo, solo retorna el string coloreado.
+    """
     return (
         Fore.CYAN + "Comandos disponibles:\n"
         "  help       - Muestra esta ayuda\n"
@@ -11,6 +31,18 @@ def show_help():
 
 
 def show_examples():
+    """
+    Devuelve una lista de ejemplos de frases válidas del DSL.
+
+    Está organizada en secciones:
+    - Básicos
+    - Clases avanzadas
+    - Rangos
+    - Grupos
+    - Negaciones
+
+    El modo interactivo la muestra cuando el usuario escribe `examples`.
+    """
     return (
         Fore.GREEN + "Ejemplos de frases válidas:\n"
         "\n--- Básicos ---\n"
@@ -34,6 +66,18 @@ def show_examples():
 
 
 def show_tokens():
+    """
+    Devuelve una lista de los tokens / palabras clave del DSL.
+
+    Está separada en:
+    - Términos básicos: clases simples (letter, digit, space, etc.) y literales.
+    - Clases avanzadas: categorías semánticas más ricas (vowel, consonant, etc.).
+    - Rangos: sintaxis para rangos de caracteres.
+    - Repeticiones: cuantificadores soportados (optional, one or more, X times...).
+    - Conectores: formas de combinar elementos (followed by, or).
+
+    El modo interactivo la muestra cuando el usuario escribe `tokens`.
+    """
     return (
         Fore.YELLOW + "Tokens válidos del DSL:\n"
         "\n--- Términos básicos ---\n"
