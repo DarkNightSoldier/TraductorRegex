@@ -572,3 +572,13 @@ raw_regex = translate_tree(tree)
 from utils import simplify_regex
 final_regex = simplify_regex(raw_regex)
 ```
+## 10. Referencias
+[1] regex101, “regex101: build, test, and debug regex.” [Online]. Available: https://regex101.com/
+[2] J. F. Morales and D. E. Herazo, “Traducción de pseudocódigo a Java con fines educativos,” Revista Educación en Ingeniería, vol. 10, no. 20, pp. 39–46, 2015. [Online]. Available: https://revistas.unal.edu.co/index.php/edin/article/view/50285
+[3] C. López and J. Gómez, “Traducción de pseudocódigo a Python para mejorar la enseñanza de la programación,” Revista Tecnológica ESPOL, vol. 28, no. 3, pp. 45–54, 2015.
+[4] Debuggex, “Debuggex: Visual Regex Tester.” [Online]. Available: https://www.debuggex.com/
+[5] Prompt Toolkit, “Building Powerful Interactive Command Lines in Python.” [Online]. Available: https://python-prompt-toolkit.readthedocs.io/
+[6] Lark Parser, “Lark — a parsing toolkit for Python (stable).” [Online]. Available: https://lark-parser.readthedocs.io/en/stable/
+[7] PSeInt, “PSeInt: Pseudocode Interpreter.” [Online]. Available: https://pseint.sourceforge.net/
+[8] Colorama, “Simple cross-platform colored terminal text in Python.” [Online]. Available: https://pypi.org/project/colorama/
+[9] Stack Overflow, “How to generate regular expressions from English?” [Online].
