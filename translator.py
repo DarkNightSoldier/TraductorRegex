@@ -1,4 +1,5 @@
-from lark import Transformer
+from lark import Transformer, Tree
+
 
 class RegexTranslator(Transformer):
 
@@ -46,18 +47,52 @@ class RegexTranslator(Transformer):
         return r"\S"
 
     def t_range(self, children):
-        # children son dos CHAR_LITERAL tipo "'a'", "'z'"
-        c1 = children[0][1:-1]
-        c2 = children[1][1:-1]
+        """
+        Rango de caracteres: range 'a' to 'z' → [a-z].
+
+        En el AST actual viene como:
+
+            t_range
+              range_expr
+                'a'
+                'z'
+        """
+        # Aplanar posibles subárboles (p.ej. range_expr)
+        flat = []
+        for ch in children:
+            if isinstance(ch, Tree):
+                flat.extend(ch.children)
+            else:
+                flat.append(ch)
+
+        if len(flat) < 2:
+            return ""
+
+        def _unquote(tok):
+            s = str(tok)
+            if len(s) >= 2 and (s[0] in ("'", '"')) and s[-1] == s[0]:
+                return s[1:-1]
+            return s
+
+        c1 = _unquote(flat[0])
+        c2 = _unquote(flat[1])
         return f"[{c1}-{c2}]"
 
-    def t_char(self, tok):
-        # tok es un Token con valor "'a'" → nos quedamos con a
-        return tok[0][1:-1]
+    def t_char(self, children):
+        """Literal de un solo carácter: 'a' → a."""
+        tok = children[0]
+        s = str(tok)
+        if len(s) >= 2 and (s[0] in ("'", '"')) and s[-1] == s[0]:
+            return s[1:-1]
+        return s
 
-    def t_string(self, tok):
-        # "'hello'" → "hello"
-        return tok[0][1:-1]
+    def t_string(self, children):
+        """Literal de cadena: 'hello' → hello."""
+        tok = children[0]
+        s = str(tok)
+        if len(s) >= 2 and (s[0] in ("'", '"')) and s[-1] == s[0]:
+            return s[1:-1]
+        return s
 
     # ---------- NEGATION ----------
     def t_except(self, children):

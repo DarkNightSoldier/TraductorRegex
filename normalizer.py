@@ -32,14 +32,17 @@ def words_to_number(words):
     """
     current = 0
     total = 0
+    seen_numeric = False
 
     for w in words:
 
         if w in NUMWORDS_SIMPLE:
             current += NUMWORDS_SIMPLE[w]
+            seen_numeric = True
 
         elif w in TENS:
             current += TENS[w]
+            seen_numeric = True
 
         elif w in SCALES:
             if current == 0:
@@ -48,15 +51,21 @@ def words_to_number(words):
             current *= SCALES[w]
             total += current
             current = 0
+            seen_numeric = True
 
         elif w == "and":
+            # Solo conectivo dentro de números compuestos
             continue
 
         else:
             return None  # palabra no numérica → abortar
 
-    return total + current
+    # Si nunca vimos una palabra numérica (por ejemplo solo ["and"])
+    # devolvemos None para que convert_numwords deje el texto intacto.
+    if not seen_numeric:
+        return None
 
+    return total + current
 
 def convert_numwords(text):
     """
@@ -128,7 +137,7 @@ class Normalizer:
         "space characters": "space one or more",
 
         # whitespace explícito
-        "whitespace": "whitespace one or more",
+        "whitespace": "whitespace",
         "whitespaces": "whitespace one or more",
 
         # nuevas clases semánticas
@@ -177,6 +186,9 @@ class Normalizer:
 
         # ---------------- NÚMEROS EN INGLÉS → ENTEROS --------------
         text = convert_numwords(text)
+        
+        # Normalizar el caso "digit zero or more" que se convierte a "digit 0 or more"
+        text = re.sub(r"\b0 or more\b", "zero or more", text)
 
         # ---------------- SANITY CLEANUP ---------------------------
         text = text.replace("1 or more", "one or more")

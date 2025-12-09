@@ -74,6 +74,35 @@ def explain_tree(tree):
     if nodetype in base_map:
         regex, desc = base_map[nodetype]
         return regex, [Fore.YELLOW + desc]
+    
+        # ---------- RANGO ----------
+    if nodetype == "t_range":
+        # Estructura esperada:
+        #   t_range
+        #     range_expr
+        #       'a'
+        #       'z'
+        if not tree.children:
+            return "", [Fore.RED + "Árbol de rango sin hijos."]
+
+        range_node = tree.children[0]
+
+        if hasattr(range_node, "children") and len(range_node.children) >= 2:
+            raw1 = str(range_node.children[0])
+            raw2 = str(range_node.children[1])
+        else:
+            raw1 = str(tree.children[0])
+            raw2 = str(tree.children[1]) if len(tree.children) > 1 else ""
+
+        def _unquote(s: str) -> str:
+            if len(s) >= 2 and (s[0] in ("'", '"')) and s[-1] == s[0]:
+                return s[1:-1]
+            return s
+
+        c1 = _unquote(raw1)
+        c2 = _unquote(raw2)
+        r = f"[{c1}-{c2}]"
+        return r, [Fore.YELLOW + f"range '{c1}' to '{c2}' → {r}"]
 
     if nodetype == "t_char":
         tok = str(tree.children[0])
