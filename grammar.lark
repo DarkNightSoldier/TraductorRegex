@@ -17,8 +17,6 @@ term: base_term "except" base_term   -> t_except
     | base_term
     | range_expr                     -> t_range
 
-# ---------- TERMINOS BASE (CLASES Y LITERALES) ----------
-
 base_term: "letter"             -> t_letter
          | "digit"              -> t_digit
          | "space"              -> t_space
