@@ -1,17 +1,72 @@
+# ===========================================================
+#  GRAMÁTICA DEL DSL DE TraductorRegex
+#
+#  Precedencia:
+#    - "followed by" (concatenación) tiene mayor precedencia.
+#    - "or" se evalúa al final, de forma asociativa a la derecha.
+#
+#  Ejemplos que parsea:
+#    - letter followed by digit
+#    - uppercase letter followed by digit zero or more
+#    - 'hello' followed by digit between 2 and 4 times
+#    - group digit followed by letter end group 3 times
+#    - range 'a' to 'z' one or more
+# ===========================================================
+
+# Regla de inicio: cualquier expresión válida del DSL.
 start: expr
 
+# Expresiones con posible "or" (alternativa).
+# Se escribe como:
+#   A or B or C
+# y se traduce internamente a:
+#   or_expr(A, or_expr(B, C))
 ?expr: sequence
      | sequence "or" expr     -> or_expr
 
+
+# ===========================================================
+#  SECUENCIAS Y ELEMENTOS
+# ===========================================================
+
+# Una secuencia es una lista de elementos unidos por "followed by".
+# Ejemplo:
+#   letter followed by digit followed by space
 sequence: element ( "followed by" element )*
 
+# Un elemento puede ser:
+#   - Un grupo entre "group" ... "end group".
+#   - Un término (posiblemente con cuantificador antes/después).
 element: group
        | repeated_term
 
+
+# ===========================================================
+#  GRUPOS
+# ===========================================================
+
+# Grupo explícito:
+#   group <sequence> end group [repetition]
+#
+# La repetición final (opcional) permite cosas como:
+#   group digit followed by letter end group 3 times
 group: "group" sequence "end group" repetition?
 
+
+# ===========================================================
+#  TÉRMINOS Y REPETICIÓN
+# ===========================================================
+
+# Término con repetición opcional antes y/o después.
+#
+# Formas admitidas:
+#   term
+#   repetition term
+#   term repetition
+#   repetition term repetition
 repeated_term: repetition? term repetition?
 
+<<<<<<< HEAD
 term: base_term
     | base_term "except" base_term   -> t_except
     | range_expr                     -> t_range
@@ -35,6 +90,67 @@ base_term:
 
 range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL
 
+=======
+# Un término puede ser:
+#   - Una construcción de excepción: base_term except base_term.
+#   - Un término base simple.
+#   - Una expresión de rango, del tipo "range 'a' to 'z'".
+term: base_term "except" base_term   -> t_except
+    | base_term
+    | range_expr                     -> t_range
+
+
+# ===========================================================
+#  TÉRMINOS BASE (CLASES, LITERALES)
+# ===========================================================
+
+# Clases semánticas y literales básicos del DSL.
+#
+# Cada alternativa se mapea a un símbolo interno (t_letter, t_digit, etc.)
+# que luego el traductor convierte a su regex correspondiente.
+base_term: "letter"             -> t_letter
+         | "digit"              -> t_digit
+         | "space"              -> t_space
+         | "any character"      -> t_any
+         | "uppercase letter"   -> t_upper
+         | "lowercase letter"   -> t_lower
+         | "vowel"              -> t_vowel
+         | "consonant"          -> t_consonant
+         | "alphanumeric"       -> t_alphanumeric
+         | "word character"     -> t_word
+         | "hex digit"          -> t_hex
+         | "whitespace"         -> t_whitespace
+         | "non whitespace"     -> t_non_whitespace
+         | CHAR_LITERAL         -> t_char
+         | STRING_LITERAL       -> t_string
+
+
+# ===========================================================
+#  RANGOS
+# ===========================================================
+
+# Rango textual:
+#   range 'a' to 'z'
+#   range '0' to '9'
+#
+# Los extremos son literales de un solo carácter.
+range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL
+
+
+# ===========================================================
+#  REPETICIONES / CUANTIFICADORES
+# ===========================================================
+
+# Cuantificadores de repetición:
+#
+#   N times                → exactamente N
+#   between N and M times  → entre N y M
+#   one or more            → 1 o más
+#   zero or more           → 0 o más
+#   optional               → 0 o 1
+#   at least N times       → N o más
+#   at most N times        → hasta N
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 repetition: INT "times"                     -> r_exact
           | "between" INT "and" INT "times" -> r_range
           | "one or more"                   -> r_one_or_more
@@ -43,9 +159,18 @@ repetition: INT "times"                     -> r_exact
           | "at least" INT "times"          -> r_at_least
           | "at most" INT "times"           -> r_at_most
 
+
+# ===========================================================
+#  TOKENS LÉXICOS
+# ===========================================================
+
+# Literal de un solo carácter entre comillas simples, excepto la propia comilla.
 CHAR_LITERAL: "'" /[^']/ "'"
+
+# Literal de cadena (cero o más caracteres no comilla simple).
 STRING_LITERAL: "'" /[^']*/ "'"
 
+# Reutilizamos INT y espacios en blanco de la librería estándar de Lark.
 %import common.INT
 %import common.WS
 %ignore WS
