@@ -1,3 +1,113 @@
+<<<<<<< HEAD
+import argparse
+from lark_parser import translate_to_regex, normalize_text
+from utils import validate_regex, simplify_regex
+
+
+def test_case(phrase, expected=None, verbose=False):
+    regex = translate_to_regex(phrase)
+    ok = True
+    msg = ""
+
+    if regex.startswith("ERROR"):
+        ok = False
+        msg = regex
+
+    elif not validate_regex(regex):
+        ok = False
+        msg = "Regex inválida generada."
+
+    elif expected is not None and simplify_regex(regex) != simplify_regex(expected):
+        ok = False
+        msg = f"Esperado: {expected}, obtenido: {regex}"
+
+    if ok:
+        print(f"✓ PASSED  →  '{phrase}'   =>   {regex}")
+    else:
+        print(f"✗ FAILED  →  '{phrase}'")
+        print("   Motivo:", msg)
+
+    if verbose:
+        print("   Normalizado:", normalize_text(phrase))
+        print("   Regex final:", regex)
+        print()
+
+
+
+# ============================================================
+# PRUEBAS DEFINIDAS
+# ============================================================
+
+BASIC_TESTS = [
+    ("digits that appear three times", "[0-9]{3}"),
+    ("a lowercase letter optionally followed by three digits", "[a-z]?[0-9]{3}"),
+    ("letters then digits", "[a-zA-Z]+[0-9]+"),
+    ("any character except digits", "[^0-9]"),
+    ("uppercase letters that repeat twice next lowercase letters", "[A-Z]{2}[a-z]+"),
+    ("'hello' then digits that appear between 2 and 5 times", "hello[0-9]{2,5}"),
+    ("digit or letter followed by space optional", "([0-9]|[a-zA-Z])\\s?")
+]
+
+RANGE_TESTS = [
+    ("range 'a' to 'f'", "[a-f]"),
+    ("range 'm' to 'z' one or more", "[m-z]+"),
+]
+
+GROUP_TESTS = [
+    ("group digit followed by digit end group 3 times", "([0-9][0-9]){3}"),
+    ("group 'a' followed by digit end group or 'hello'", "(a[0-9]|hello)")
+]
+
+ERROR_TESTS = [
+    ("digit followedby letter", None),
+    ("3 times digit", None),
+    ("range 'z' to 'a'", None),  # rango invertido → debe fallar semánticamente
+]
+
+VOWEL_TESTS = [
+    ("vowel", "[AEIOUaeiou]"),
+    ("vowels", "[AEIOUaeiou]+"),
+    ("vowel followed by consonant", "[AEIOUaeiou][BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]"),
+]
+
+HEX_TESTS = [
+    ("hex digit", "[0-9A-Fa-f]"),
+    ("hex digits", "[0-9A-Fa-f]+"),
+]
+
+WORD_TESTS = [
+    ("word character one or more", r"\w+"),
+]
+
+ALNUM_TESTS = [
+    ("alphanumeric 3 times", "[A-Za-z0-9]{3}"),
+]
+
+NONSPACE_TESTS = [
+    ("non whitespace one or more", r"\S+"),
+]
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
+
+    print("\n=== PRUEBAS BÁSICAS ===")
+    for phrase, expected in BASIC_TESTS:
+        test_case(phrase, expected, args.verbose)
+
+    print("\n=== PRUEBAS DE RANGO ===")
+    for phrase, expected in RANGE_TESTS:
+        test_case(phrase, expected, args.verbose)
+
+    print("\n=== PRUEBAS DE GRUPOS ===")
+    for phrase, expected in GROUP_TESTS:
+=======
 """
 Módulo `test.py`
 
@@ -181,8 +291,24 @@ if __name__ == "__main__":
 
     print("\n=== PRUEBAS DE NÚMEROS EN INGLÉS ===")
     for phrase, expected in ENGLISH_NUMBER_TESTS:
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         test_case(phrase, expected, args.verbose)
 
     print("\n=== PRUEBAS DE ERRORES ESPERADOS ===")
     for phrase, expected in ERROR_TESTS:
         test_case(phrase, expected, args.verbose)
+<<<<<<< HEAD
+
+    print("\n=== PRUEBAS DE NÚMEROS EN INGLÉS ===")
+    tests_num = [
+        ("digit twenty times", "[0-9]{20}"),
+        ("letter seventy two times", "[a-zA-Z]{72}"),
+        ("digit one hundred and five times", "[0-9]{105}"),
+        ("digit two thousand and eight times", "[0-9]{2008}"),
+        ("hex digit three hundred forty one times", "[0-9A-Fa-f]{341}"),
+    ]
+
+    for phrase, expected in tests_num:
+        test_case(phrase, expected, args.verbose)
+=======
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593

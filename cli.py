@@ -14,7 +14,10 @@ Permite:
 import argparse
 import re
 
+<<<<<<< HEAD
+=======
 from colorama import Fore, init
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 from lark_parser import translate_to_regex, normalizer, parser
 from translator import RegexTranslator
 from completer import DSLCompleter
@@ -30,6 +33,8 @@ init(autoreset=True)
 
 
 def main():
+<<<<<<< HEAD
+=======
     """
     Punto de entrada del programa cuando se ejecuta `python cli.py`.
 
@@ -38,10 +43,21 @@ def main():
     - Llama a `run_conversion` o `run_interactive` según corresponda.
     """
     # Parser de argumentos para la CLI
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     parser_arg = argparse.ArgumentParser(
         description="TraductorRegex – DSL para generar expresiones regulares."
     )
 
+<<<<<<< HEAD
+    parser_arg.add_argument("phrase", nargs="?", help="Frase pseudonatural a convertir.")
+    parser_arg.add_argument("--test", help="Cadena para validar contra la Regex.")
+    parser_arg.add_argument("--explain", action="store_true", help="Explica paso a paso la conversión.")
+    parser_arg.add_argument("--debug", action="store_true", help="Muestra DSL normalizado, AST y regex sin simplificar.")
+    parser_arg.add_argument("--interactive", action="store_true", help="Modo interactivo con autocompletado.")
+
+    args = parser_arg.parse_args()
+
+=======
     # Argumento posicional: la frase en pseudolenguaje natural a convertir
     parser_arg.add_argument(
         "phrase",
@@ -80,11 +96,15 @@ def main():
     args = parser_arg.parse_args()
 
     # Si se pidió modo interactivo, delegamos a `run_interactive`
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     if args.interactive:
         run_interactive(args)
         return
 
+<<<<<<< HEAD
+=======
     # Si no hay frase y no estamos en interactivo, es un error de uso
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     if not args.phrase:
         print(Fore.YELLOW + "ERROR: No ingresaste ninguna frase.")
         return
@@ -94,6 +114,19 @@ def main():
 
 
 def run_conversion(phrase, args):
+<<<<<<< HEAD
+
+    # --------------------------------------
+    # MODO DEBUG → mostrar salida detallada
+    # --------------------------------------
+    if args.debug:
+        print(Fore.CYAN + "\n=== DEBUG MODE ACTIVADO ===\n")
+
+        print(Fore.GREEN + "Frase original:")
+        print(" ", phrase, "\n")
+
+        # 1. Normalización
+=======
     """
     Ejecuta el flujo de conversión para una frase dada.
 
@@ -120,35 +153,64 @@ def run_conversion(phrase, args):
         print(" ", phrase, "\n")
 
         # 2) Normalizar con el normalizador global de lark_parser
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         normalized = normalizer.normalize(phrase)
         print(Fore.GREEN + "DSL normalizado:")
         print(" ", normalized, "\n")
 
+<<<<<<< HEAD
+        # 2. AST
+=======
         # 3) Construir AST con el parser de Lark
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         try:
             tree = parser.parse(normalized)
             print(Fore.GREEN + "AST generado:")
             print(tree.pretty(), "\n")
         except Exception as e:
+<<<<<<< HEAD
+            print(Fore.RED + "Error al generar AST:", e)
+            return
+
+        # 3. Regex cruda
+=======
             # Si algo falla en el parsing, lo reportamos y salimos
             print(Fore.RED + "Error al generar AST:", e)
             return
 
         # 4) Traducir AST a regex con el Transformer de `translator.py`
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         try:
             raw_regex = RegexTranslator().transform(tree)
             print(Fore.GREEN + "Regex cruda generada:")
             print(" ", raw_regex, "\n")
         except Exception as e:
+<<<<<<< HEAD
+            print(Fore.RED + "Error durante traducción a regex:", e)
+            return
+
+        # 4. Regex final (simplificada)
+=======
             # Si falla la transformación (regla no manejada, etc.), se reporta
             print(Fore.RED + "Error durante traducción a regex:", e)
             return
 
         # 5) Simplificar/optimizar la regex resultante
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         final_regex = simplify_regex(raw_regex)
         print(Fore.GREEN + "Regex simplificada (final):")
         print(" ", final_regex, "\n")
 
+<<<<<<< HEAD
+        if args.test:
+            test_regex(final_regex, args.test)
+
+        return
+
+    # --------------------------------------
+    # MODO NORMAL
+    # --------------------------------------
+=======
         # 6) Si se pasó `--test`, probamos la regex contra la cadena dada
         if args.test:
             test_regex(final_regex, args.test)
@@ -158,6 +220,7 @@ def run_conversion(phrase, args):
 
     # ------------------ MODO NORMAL ------------------
     # 1) Usa el pipeline completo (normalización + parseo + traducción)
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     regex = translate_to_regex(phrase)
 
     # 2) Aplica las simplificaciones de regex (optimización, forma canónica, etc.)
@@ -214,11 +277,16 @@ def run_interactive(args):
         # - gestionar autocompletado (TAB)
         # - registrar en el historial
         phrase = prompt("Frase > ", completer=completer, history=history)
+<<<<<<< HEAD
+        cleaned = phrase.strip().lower()
+
+=======
 
         # Versión “limpia” de la entrada para detectar comandos
         cleaned = phrase.strip().lower()
 
         # Comando: salir del modo interactivo
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         if cleaned == "exit":
             print(Fore.CYAN + "Saliendo del modo interactivo.")
             break
@@ -238,7 +306,10 @@ def run_interactive(args):
             print(show_tokens())
             continue
 
+<<<<<<< HEAD
+=======
         # Entrada vacía → advertimos y pedimos de nuevo
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         if not phrase.strip():
             print(Fore.YELLOW + "No escribiste ninguna frase.")
             continue

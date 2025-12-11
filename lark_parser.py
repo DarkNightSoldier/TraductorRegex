@@ -15,7 +15,11 @@ from lark import Lark, UnexpectedInput
 from translator import RegexTranslator
 from normalizer import Normalizer
 
+<<<<<<< HEAD
+# Instancia global del normalizador
+=======
 # Instancia global del normalizador que se reutiliza en todo el proyecto.
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 normalizer = Normalizer()
 
 # ----------------------------------------------------------------------
@@ -33,6 +37,14 @@ except Exception as e:
     parser = None
 
 
+<<<<<<< HEAD
+# ============================================================
+#  FUNCIONES INTERNAS (útiles para depuración y CLI)
+# ============================================================
+
+def normalize_text(text: str) -> str:
+    """Retorna el DSL normalizado sin intentar parsearlo."""
+=======
 # ----------------------------------------------------------------------
 # FUNCIONES AUXILIARES
 # ----------------------------------------------------------------------
@@ -45,10 +57,17 @@ def normalize_text(text: str) -> str:
     Esta función delega en la instancia global de `Normalizer`.
     Se usa tanto en el pipeline principal como en el modo explicación.
     """
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     return normalizer.normalize(text)
 
 
 def parse_normalized(normalized: str):
+<<<<<<< HEAD
+    """Parsea DSL normalizado y retorna el AST."""
+    if parser is None:
+        raise RuntimeError("ERROR: No se pudo cargar grammar.lark")
+
+=======
     """
     Parsea una cadena ya normalizada usando la gramática de Lark y devuelve el AST.
 
@@ -71,10 +90,25 @@ def parse_normalized(normalized: str):
     """
     if parser is None:
         raise RuntimeError("ERROR: No se pudo cargar grammar.lark")
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     return parser.parse(normalized)
 
 
 def translate_tree(tree):
+<<<<<<< HEAD
+    """Convierte el AST en una regex cruda."""
+    return RegexTranslator().transform(tree)
+
+
+# ============================================================
+#  API PRINCIPAL
+# ============================================================
+
+def translate_to_regex(text: str):
+    """
+    Función principal usada por el CLI y test.py.
+    Retorna solo la regex final (o error).
+=======
     """
     Traduce un AST de Lark a una expresión regular.
 
@@ -115,10 +149,28 @@ def translate_to_regex(text: str):
     -------
     str
         Regex generada o un mensaje de error que empieza por "ERROR".
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     """
     if parser is None:
         return "ERROR: No se pudo cargar la gramática."
     try:
+<<<<<<< HEAD
+        # 1. Normalizar entrada natural → DSL
+        normalized = normalize_text(text)
+
+        # 2. Parsear DSL
+        tree = parse_normalized(normalized)
+
+        # 3. Traducir AST → regex cruda
+        regex = translate_tree(tree)
+
+        return regex
+
+    except UnexpectedInput:
+        return f"ERROR: La frase no coincide con el DSL."
+
+    except Exception as e:
+=======
         # 1) Normalizar
         normalized = normalize_text(text)
         # 2) Parsear a AST
@@ -132,4 +184,5 @@ def translate_to_regex(text: str):
         return "ERROR: La frase no coincide con el DSL."
     except Exception as e:
         # Cualquier otro error interno (bug en transformer, etc.)
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         return f"ERROR interno: {e}"

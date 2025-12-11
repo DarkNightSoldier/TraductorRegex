@@ -66,6 +66,31 @@ group: "group" sequence "end group" repetition?
 #   repetition term repetition
 repeated_term: repetition? term repetition?
 
+<<<<<<< HEAD
+term: base_term
+    | base_term "except" base_term   -> t_except
+    | range_expr                     -> t_range
+
+base_term:
+      "letter"             -> t_letter
+    | "digit"              -> t_digit
+    | "space"              -> t_space
+    | "any character"      -> t_any
+    | "uppercase letter"   -> t_upper
+    | "lowercase letter"   -> t_lower
+    | "vowel"              -> t_vowel
+    | "consonant"          -> t_consonant
+    | "alphanumeric"       -> t_alphanumeric
+    | "word character"     -> t_word
+    | "hex digit"          -> t_hex
+    | "whitespace"         -> t_whitespace
+    | "non whitespace"     -> t_non_whitespace
+    | CHAR_LITERAL         -> t_char
+    | STRING_LITERAL       -> t_string
+
+range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL
+
+=======
 # Un término puede ser:
 #   - Una construcción de excepción: base_term except base_term.
 #   - Un término base simple.
@@ -125,6 +150,7 @@ range_expr: "range" CHAR_LITERAL "to" CHAR_LITERAL
 #   optional               → 0 o 1
 #   at least N times       → N o más
 #   at most N times        → hasta N
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 repetition: INT "times"                     -> r_exact
           | "between" INT "and" INT "times" -> r_range
           | "one or more"                   -> r_one_or_more

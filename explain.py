@@ -12,6 +12,37 @@ se construye la expresión regular a partir de la frase en DSL:
 """
 
 from colorama import Fore
+<<<<<<< HEAD
+from lark_parser import normalize_text, parse_normalized, translate_tree
+
+
+def explain_phrase_and_regex(phrase, final_regex):
+    explanation = []
+
+    # ============================================================
+    # 1. NORMALIZACIÓN
+    # ============================================================
+    normalized = normalize_text(phrase)
+
+    explanation.append(Fore.CYAN + "=== Normalización ===")
+    explanation.append(Fore.GREEN + f"Frase original: {phrase}")
+    explanation.append(Fore.GREEN + f"DSL normalizado: {normalized}\n")
+
+    # ============================================================
+    # 2. PARSING → AST
+    # ============================================================
+    try:
+        tree = parse_normalized(normalized)
+    except Exception as e:
+        return Fore.RED + f"ERROR al generar AST: {e}"
+
+    explanation.append(Fore.CYAN + "=== AST generado ===")
+    explanation.append(tree.pretty() + "\n")
+
+    # ============================================================
+    # 3. EXPLICACIÓN ESTRUCTURAL
+    # ============================================================
+=======
 from lark_parser import normalize_text, parse_normalized
 
 
@@ -57,17 +88,34 @@ def explain_phrase_and_regex(phrase, final_regex):
     explanation.append(tree.pretty() + "\n")
 
     # 3) Recorrer recursivamente el AST para explicar la estructura
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     explanation.append(Fore.CYAN + "=== Explicación estructural ===")
     built_regex, steps = explain_tree(tree)
     explanation.extend(steps)
 
+<<<<<<< HEAD
+    # ============================================================
+    # 4. REGEX FINAL
+    # ============================================================
+=======
     # 4) Mostrar la regex final (la que realmente se usa)
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     explanation.append("\n" + Fore.CYAN + "=== Regex final ===")
     explanation.append(Fore.GREEN + final_regex)
 
     return "\n".join(explanation)
 
 
+<<<<<<< HEAD
+# ============================================================
+# FUNCIÓN RECURSIVA PRINCIPAL
+# ============================================================
+
+def explain_tree(tree):
+    nodetype = getattr(tree, "data", None)
+
+    # -------------------- TERMINALES --------------------
+=======
 def explain_tree(tree):
     """
     Función recursiva que explica un nodo del AST y todos sus hijos.
@@ -91,10 +139,14 @@ def explain_tree(tree):
     # CASO 1: TERMINALES (Tokens)
     # Si `nodetype` es None, Lark nos ha dado un Token (valor textual).
     # ------------------------------------------------------------------
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     if nodetype is None:
         token = str(tree)
         return token, [Fore.YELLOW + f"Terminal literal → '{token}'"]
 
+<<<<<<< HEAD
+    # ---------- BASE TERMS ----------
+=======
     # ------------------------------------------------------------------
     # CASO 2: Nodo raíz 'start'
     # Representa el punto de entrada de la gramática.
@@ -127,6 +179,7 @@ def explain_tree(tree):
     # Cada entrada mapea una regla de la gramática a:
     #    (regex, descripción legible)
     # ------------------------------------------------------------------
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     base_map = {
         "t_digit": ("[0-9]", "digit → [0-9]"),
         "t_letter": ("[a-zA-Z]", "letter → [a-zA-Z]"),
@@ -135,10 +188,15 @@ def explain_tree(tree):
         "t_upper": ("[A-Z]", "uppercase letter → [A-Z]"),
         "t_lower": ("[a-z]", "lowercase letter → [a-z]"),
         "t_vowel": ("[AEIOUaeiou]", "vowel → [AEIOUaeiou]"),
+<<<<<<< HEAD
+        "t_consonant": ("[BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]",
+                        "consonant → all consonants"),
+=======
         "t_consonant": (
             "[BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz]",
             "consonant → all consonants",
         ),
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         "t_word": (r"\w", "word character → \\w"),
         "t_alphanumeric": ("[A-Za-z0-9]", "alphanumeric → [A-Za-z0-9]"),
         "t_hex": ("[0-9A-Fa-f]", "hex digit → [0-9A-Fa-f]"),
@@ -147,6 +205,28 @@ def explain_tree(tree):
     }
 
     if nodetype in base_map:
+<<<<<<< HEAD
+        regex, msg = base_map[nodetype]
+        return regex, [Fore.YELLOW + msg]
+
+    # ---------- LITERALES ----------
+    if nodetype == "t_char":
+        val = tree.children[0].value[1:-1]
+        return val, [Fore.YELLOW + f"character literal '{val}' → {val}"]
+
+    if nodetype == "t_string":
+        val = tree.children[0].value[1:-1]
+        return val, [Fore.YELLOW + f"string literal \"{val}\" → {val}"]
+
+    # ---------- RANGO ----------
+    if nodetype == "t_range":
+        c1 = tree.children[0][1:-1]
+        c2 = tree.children[1][1:-1]
+        r = f"[{c1}-{c2}]"
+        return r, [Fore.YELLOW + f"range '{c1}' to '{c2}' → {r}"]
+
+    # ---------- NEGACIÓN ----------
+=======
         regex, desc = base_map[nodetype]
         return regex, [Fore.YELLOW + desc]
 
@@ -217,22 +297,59 @@ def explain_tree(tree):
     #
     # Construimos una clase negada: [^...] a partir del segundo hijo.
     # ------------------------------------------------------------------
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     if nodetype == "t_except":
         base_r, base_steps = explain_tree(tree.children[0])
         neg_r, neg_steps = explain_tree(tree.children[1])
 
+<<<<<<< HEAD
+        inside = neg_r.strip("[]")
+        r = f"[^{inside}]"
+
+=======
         # Asumimos que neg_r es algo tipo "[...]" → extraemos el interior
         inside = neg_r.strip("[]")
         r = f"[^{inside}]"
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         steps = base_steps + neg_steps
         steps.append(Fore.YELLOW + f"except → negación → {r}")
         return r, steps
 
+<<<<<<< HEAD
+    # ---------- REPETICIONES ----------
+    if nodetype == "r_optional":
+        return "?", ["optional → ?"]
+
+    if nodetype == "r_one_or_more":
+        return "+", ["one or more → +"]
+
+    if nodetype == "r_zero_or_more":
+        return "*", ["zero or more → *"]
+
+    if nodetype == "r_exact":
+        n = tree.children[0]
+        return f"{{{n}}}", [f"{n} times → {{{n}}}"]
+
+    if nodetype == "r_range":
+        a, b = tree.children
+        return f"{{{a},{b}}}", [f"between {a} and {b} times → {{{a},{b}}}"]
+
+    if nodetype == "r_at_least":
+        n = tree.children[0]
+        return f"{{{n},}}", [f"at least {n} times → {{{n},}}"]
+
+    if nodetype == "r_at_most":
+        n = tree.children[0]
+        return f"{{0,{n}}}", [f"at most {n} times → {{0,{n}}}"]
+
+    # ---------- SEQUENCE ----------
+=======
     # ------------------------------------------------------------------
     # CASO 9: sequence
     #
     # Representa concatenación de varios elementos.
     # ------------------------------------------------------------------
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     if nodetype == "sequence":
         parts = []
         steps = []
@@ -240,6 +357,14 @@ def explain_tree(tree):
             r, s = explain_tree(ch)
             parts.append(r)
             steps.extend(s)
+<<<<<<< HEAD
+        final = "".join(parts)
+        steps.append(Fore.YELLOW + f"sequence → concatenación: {final}")
+        return final, steps
+
+    # ---------- OR ----------
+    if nodetype == "or_expr":
+=======
         joined = "".join(parts)
         steps.append(Fore.YELLOW + f"sequence → concatenación: {joined}")
         return joined, steps
@@ -250,11 +375,31 @@ def explain_tree(tree):
     # Representa alternativas: (A|B).
     # ------------------------------------------------------------------
     if nodetype in ("or", "or_expr"):
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         left, s1 = explain_tree(tree.children[0])
         right, s2 = explain_tree(tree.children[1])
         r = f"({left}|{right})"
         return r, s1 + s2 + [Fore.YELLOW + f"or → alternativa: {r}"]
 
+<<<<<<< HEAD
+    # ---------- REPEATED TERM ----------
+    if nodetype == "repeated_term":
+        steps = []
+        parts = []
+        for ch in tree.children:
+            r, s = explain_tree(ch)
+            parts.append(r)
+            steps.extend(s)
+        r = "".join(parts)
+        steps.append(Fore.YELLOW + f"repeated term → {r}")
+        return r, steps
+
+    # ---------- GROUP ----------
+    if nodetype == "group":
+        seq_r, seq_steps = explain_tree(tree.children[0])
+        steps = seq_steps.copy()
+
+=======
     # ------------------------------------------------------------------
     # CASO 11: Nodos de repetición / cuantificadores
     #
@@ -378,18 +523,29 @@ def explain_tree(tree):
         steps = seq_steps.copy()
 
         # Sin repetición → solo agrupamos
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         if len(tree.children) == 1:
             r = f"({seq_r})"
             steps.append(Fore.YELLOW + f"group → {r}")
             return r, steps
 
+<<<<<<< HEAD
+        rep_r, rep_steps = explain_tree(tree.children[1])
+        steps.extend(rep_steps)
+
+=======
         # Con repetición → (expr)quantifier
         rep_r, rep_steps = explain_tree(tree.children[1])
         steps.extend(rep_steps)
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
         r = f"({seq_r}){rep_r}"
         steps.append(Fore.YELLOW + f"group with repetition → {r}")
         return r, steps
 
+<<<<<<< HEAD
+    # Fallback
+    return "", [Fore.RED + f"⚠ nodo no reconocido: {nodetype}"]
+=======
     # ------------------------------------------------------------------
     # CASO 14: Fallback
     #
@@ -406,3 +562,4 @@ def explain_tree(tree):
 
     regex = "".join(regex_parts)
     return regex, steps
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593

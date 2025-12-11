@@ -21,6 +21,14 @@ from prompt_toolkit.completion import Completer, Completion
 
 # Términos básicos y avanzados que describen clases de caracteres
 TERMS = [
+<<<<<<< HEAD
+    # clases básicas
+    "letter", "digit", "space", "any character",
+    "uppercase letter", "lowercase letter",
+
+    # clases extendidas
+    "vowel", "consonant",
+=======
     "letter",
     "digit",
     "space",
@@ -29,11 +37,20 @@ TERMS = [
     "lowercase letter",
     "vowel",
     "consonant",
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
     "word character",
     "alphanumeric",
     "hex digit",
     "whitespace",
     "non whitespace",
+<<<<<<< HEAD
+
+    # literales simples de ejemplo
+    "'a'", "'b'", "'c'", "'@'", "'1'",
+
+    # range
+    "range",   # permite sugerir "range" como palabra clave
+=======
     # Algunos literales de ejemplo / uso frecuente
     "'a'",
     "'b'",
@@ -42,10 +59,16 @@ TERMS = [
     "'1'",
     # Palabra clave para rangos
     "range",
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 ]
 
 # Palabras relacionadas con cuantificadores y repeticiones
 REPETITIONS = [
+<<<<<<< HEAD
+    "optional", "one or more", "zero or more",
+    "times", "between", "and",
+    "at least", "at most"
+=======
     "optional",
     "one or more",
     "zero or more",
@@ -54,6 +77,7 @@ REPETITIONS = [
     "and",
     "at least",
     "at most",
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
 ]
 
 # Conectores para encadenar términos y grupos
@@ -113,12 +137,18 @@ class DSLCompleter(Completer):
                 yield Completion(w, start_position=0)
             return
 
+<<<<<<< HEAD
+        # Si se puso una repetición → sugerir conectores
+        if last in ["optional", "one", "zero", "times", "more",
+                    "between", "and", "at", "least", "most"]:
+=======
         # ------------------------------------------------------------------
         # CASO 3: El último token forma parte de expresiones de repetición
         #         (ej: "optional", "one", "zero", "times", "between", etc.)
         #         → sugerimos conectores ("followed by", "or") para seguir la frase.
         # ------------------------------------------------------------------
         if last in ["optional", "one", "zero", "times", "more", "between", "and", "at", "least", "most"]:
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
             for w in CONNECTORS:
                 yield Completion(w, start_position=0)
             return
@@ -133,6 +163,9 @@ class DSLCompleter(Completer):
         # ------------------------------------------------------------------
         for w in TERMS + REPETITIONS + CONNECTORS:
             if w.startswith(last):
+<<<<<<< HEAD
+=======
                 # start_position negativo: número de caracteres a reemplazar
                 # desde la posición actual (el prefijo ya escrito).
+>>>>>>> c2e13238c6ee0f0eebeed2a6b7618046035fb593
                 yield Completion(w, start_position=-len(last))
